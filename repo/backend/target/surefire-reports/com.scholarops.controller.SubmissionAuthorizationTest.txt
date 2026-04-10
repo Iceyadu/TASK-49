@@ -1,0 +1,4 @@
+-------------------------------------------------------------------------------
+Test set: com.scholarops.controller.SubmissionAuthorizationTest
+-------------------------------------------------------------------------------
+Tests run: 0, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.244 s -- in com.scholarops.controller.SubmissionAuthorizationTest

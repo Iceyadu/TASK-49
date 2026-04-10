@@ -1,0 +1,76 @@
+-------------------------------------------------------------------------------
+Test set: com.scholarops.controller.AuthorizationDenialTest$StudentCannotAccessAdminEndpoints
+-------------------------------------------------------------------------------
+Tests run: 6, Failures: 6, Errors: 0, Skipped: 0, Time elapsed: 0.023 s <<< FAILURE! -- in com.scholarops.controller.AuthorizationDenialTest$StudentCannotAccessAdminEndpoints
+com.scholarops.controller.AuthorizationDenialTest$StudentCannotAccessAdminEndpoints.studentCannotViewAuditLogs -- Time elapsed: 0.003 s <<< FAILURE!
+java.lang.AssertionError: Status expected:<403> but was:<200>
+	at org.springframework.test.util.AssertionErrors.fail(AssertionErrors.java:59)
+	at org.springframework.test.util.AssertionErrors.assertEquals(AssertionErrors.java:122)
+	at org.springframework.test.web.servlet.result.StatusResultMatchers.lambda$matcher$9(StatusResultMatchers.java:637)
+	at org.springframework.test.web.servlet.MockMvc$1.andExpect(MockMvc.java:214)
+	at com.scholarops.controller.AuthorizationDenialTest$StudentCannotAccessAdminEndpoints.studentCannotViewAuditLogs(AuthorizationDenialTest.java:330)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1597)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1597)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1597)
+
+com.scholarops.controller.AuthorizationDenialTest$StudentCannotAccessAdminEndpoints.studentCannotCreateUser -- Time elapsed: 0.003 s <<< FAILURE!
+java.lang.AssertionError: Status expected:<403> but was:<400>
+	at org.springframework.test.util.AssertionErrors.fail(AssertionErrors.java:59)
+	at org.springframework.test.util.AssertionErrors.assertEquals(AssertionErrors.java:122)
+	at org.springframework.test.web.servlet.result.StatusResultMatchers.lambda$matcher$9(StatusResultMatchers.java:637)
+	at org.springframework.test.web.servlet.MockMvc$1.andExpect(MockMvc.java:214)
+	at com.scholarops.controller.AuthorizationDenialTest$StudentCannotAccessAdminEndpoints.studentCannotCreateUser(AuthorizationDenialTest.java:303)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1597)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1597)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1597)
+
+com.scholarops.controller.AuthorizationDenialTest$StudentCannotAccessAdminEndpoints.studentCannotViewPermissionHistory -- Time elapsed: 0.003 s <<< FAILURE!
+java.lang.AssertionError: Status expected:<403> but was:<200>
+	at org.springframework.test.util.AssertionErrors.fail(AssertionErrors.java:59)
+	at org.springframework.test.util.AssertionErrors.assertEquals(AssertionErrors.java:122)
+	at org.springframework.test.web.servlet.result.StatusResultMatchers.lambda$matcher$9(StatusResultMatchers.java:637)
+	at org.springframework.test.web.servlet.MockMvc$1.andExpect(MockMvc.java:214)
+	at com.scholarops.controller.AuthorizationDenialTest$StudentCannotAccessAdminEndpoints.studentCannotViewPermissionHistory(AuthorizationDenialTest.java:338)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1597)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1597)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1597)
+
+com.scholarops.controller.AuthorizationDenialTest$StudentCannotAccessAdminEndpoints.studentCannotAssignRoles -- Time elapsed: 0.003 s <<< FAILURE!
+java.lang.AssertionError: Status expected:<403> but was:<500>
+	at org.springframework.test.util.AssertionErrors.fail(AssertionErrors.java:59)
+	at org.springframework.test.util.AssertionErrors.assertEquals(AssertionErrors.java:122)
+	at org.springframework.test.web.servlet.result.StatusResultMatchers.lambda$matcher$9(StatusResultMatchers.java:637)
+	at org.springframework.test.web.servlet.MockMvc$1.andExpect(MockMvc.java:214)
+	at com.scholarops.controller.AuthorizationDenialTest$StudentCannotAccessAdminEndpoints.studentCannotAssignRoles(AuthorizationDenialTest.java:322)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1597)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1597)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1597)
+
+com.scholarops.controller.AuthorizationDenialTest$StudentCannotAccessAdminEndpoints.studentCannotListRoles -- Time elapsed: 0.002 s <<< FAILURE!
+java.lang.AssertionError: Status expected:<403> but was:<200>
+	at org.springframework.test.util.AssertionErrors.fail(AssertionErrors.java:59)
+	at org.springframework.test.util.AssertionErrors.assertEquals(AssertionErrors.java:122)
+	at org.springframework.test.web.servlet.result.StatusResultMatchers.lambda$matcher$9(StatusResultMatchers.java:637)
+	at org.springframework.test.web.servlet.MockMvc$1.andExpect(MockMvc.java:214)
+	at com.scholarops.controller.AuthorizationDenialTest$StudentCannotAccessAdminEndpoints.studentCannotListRoles(AuthorizationDenialTest.java:311)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1597)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1597)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1597)
+
+com.scholarops.controller.AuthorizationDenialTest$StudentCannotAccessAdminEndpoints.studentCannotListUsers -- Time elapsed: 0.003 s <<< FAILURE!
+java.lang.AssertionError: Status expected:<403> but was:<200>
+	at org.springframework.test.util.AssertionErrors.fail(AssertionErrors.java:59)
+	at org.springframework.test.util.AssertionErrors.assertEquals(AssertionErrors.java:122)
+	at org.springframework.test.web.servlet.result.StatusResultMatchers.lambda$matcher$9(StatusResultMatchers.java:637)
+	at org.springframework.test.web.servlet.MockMvc$1.andExpect(MockMvc.java:214)
+	at com.scholarops.controller.AuthorizationDenialTest$StudentCannotAccessAdminEndpoints.studentCannotListUsers(AuthorizationDenialTest.java:292)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1597)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1597)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1597)
+

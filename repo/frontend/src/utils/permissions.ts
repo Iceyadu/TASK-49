@@ -1,0 +1,97 @@
+// Permission constants aligned with backend PermissionType enum
+export const PERMISSIONS = {
+  // User management
+  USER_MANAGE: 'USER_MANAGE',
+
+  // Role management
+  ROLE_ASSIGN: 'ROLE_ASSIGN',
+
+  // Audit
+  AUDIT_VIEW: 'AUDIT_VIEW',
+
+  // Password
+  PASSWORD_ADMIN_RESET: 'PASSWORD_ADMIN_RESET',
+
+  // Crawl sources
+  CRAWL_SOURCE_MANAGE: 'CRAWL_SOURCE_MANAGE',
+
+  // Crawl rules
+  CRAWL_RULE_MANAGE: 'CRAWL_RULE_MANAGE',
+
+  // Crawl runs
+  CRAWL_RUN_MANAGE: 'CRAWL_RUN_MANAGE',
+
+  // Content
+  CONTENT_REVIEW: 'CONTENT_REVIEW',
+  CONTENT_VIEW: 'CONTENT_VIEW',
+
+  // Question banks
+  QUESTION_BANK_MANAGE: 'QUESTION_BANK_MANAGE',
+
+  // Quizzes
+  QUIZ_MANAGE: 'QUIZ_MANAGE',
+  QUIZ_TAKE: 'QUIZ_TAKE',
+
+  // Submissions
+  SUBMISSION_VIEW_OWN: 'SUBMISSION_VIEW_OWN',
+  SUBMISSION_VIEW_ALL: 'SUBMISSION_VIEW_ALL',
+
+  // Grading
+  GRADING_MANAGE: 'GRADING_MANAGE',
+  GRADING_VIEW: 'GRADING_VIEW',
+
+  // Schedule
+  SCHEDULE_MANAGE_OWN: 'SCHEDULE_MANAGE_OWN',
+
+  // Plagiarism
+  PLAGIARISM_VIEW: 'PLAGIARISM_VIEW',
+
+  // Wrong answers
+  WRONG_ANSWER_VIEW_OWN: 'WRONG_ANSWER_VIEW_OWN',
+} as const
+
+export type PermissionCode = typeof PERMISSIONS[keyof typeof PERMISSIONS]
+
+// Role-permission mapping aligned with backend
+export const ROLE_PERMISSIONS: Record<string, string[]> = {
+  ADMINISTRATOR: [
+    PERMISSIONS.USER_MANAGE,
+    PERMISSIONS.ROLE_ASSIGN,
+    PERMISSIONS.AUDIT_VIEW,
+    PERMISSIONS.PASSWORD_ADMIN_RESET,
+  ],
+  CONTENT_CURATOR: [
+    PERMISSIONS.CRAWL_SOURCE_MANAGE,
+    PERMISSIONS.CRAWL_RULE_MANAGE,
+    PERMISSIONS.CRAWL_RUN_MANAGE,
+    PERMISSIONS.CONTENT_REVIEW,
+    PERMISSIONS.CONTENT_VIEW,
+  ],
+  INSTRUCTOR: [
+    PERMISSIONS.QUESTION_BANK_MANAGE,
+    PERMISSIONS.QUIZ_MANAGE,
+    PERMISSIONS.SUBMISSION_VIEW_ALL,
+    PERMISSIONS.GRADING_MANAGE,
+    PERMISSIONS.GRADING_VIEW,
+    PERMISSIONS.PLAGIARISM_VIEW,
+  ],
+  TEACHING_ASSISTANT: [
+    PERMISSIONS.GRADING_VIEW,
+    PERMISSIONS.GRADING_MANAGE,
+    PERMISSIONS.SUBMISSION_VIEW_ALL,
+    PERMISSIONS.PLAGIARISM_VIEW,
+  ],
+  STUDENT: [
+    PERMISSIONS.QUIZ_TAKE,
+    PERMISSIONS.SUBMISSION_VIEW_OWN,
+    PERMISSIONS.SCHEDULE_MANAGE_OWN,
+    PERMISSIONS.CONTENT_VIEW,
+    PERMISSIONS.WRONG_ANSWER_VIEW_OWN,
+  ],
+}
+
+// Helper to check if a role has a specific permission
+export function roleHasPermission(role: string, permission: string): boolean {
+  const perms = ROLE_PERMISSIONS[role]
+  return perms ? perms.includes(permission) : false
+}

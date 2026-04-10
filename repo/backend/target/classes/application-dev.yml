@@ -1,0 +1,19 @@
+spring:
+  jpa:
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+  flyway:
+    clean-disabled: false
+
+scholarops:
+  jwt:
+    secret: ${JWT_SECRET:c2Nob2xhcm9wcy1kZXYtb25seS1zZWNyZXQta2V5LWRvLW5vdC11c2UtaW4tcHJvZHVjdGlvbi1tdXN0LWJlLTI1Ni1iaXRz}
+  aes:
+    secret-key: ${SCHOLAROPS_AES_KEY:dev0only0do0not0use0in0prod0key}
+
+logging:
+  level:
+    com.scholarops: DEBUG
+    org.springframework.security: DEBUG

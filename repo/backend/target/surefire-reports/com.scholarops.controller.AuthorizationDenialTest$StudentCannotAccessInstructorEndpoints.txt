@@ -1,0 +1,100 @@
+-------------------------------------------------------------------------------
+Test set: com.scholarops.controller.AuthorizationDenialTest$StudentCannotAccessInstructorEndpoints
+-------------------------------------------------------------------------------
+Tests run: 8, Failures: 8, Errors: 0, Skipped: 0, Time elapsed: 0.033 s <<< FAILURE! -- in com.scholarops.controller.AuthorizationDenialTest$StudentCannotAccessInstructorEndpoints
+com.scholarops.controller.AuthorizationDenialTest$StudentCannotAccessInstructorEndpoints.studentCannotAssembleQuiz -- Time elapsed: 0.003 s <<< FAILURE!
+java.lang.AssertionError: Status expected:<403> but was:<500>
+	at org.springframework.test.util.AssertionErrors.fail(AssertionErrors.java:59)
+	at org.springframework.test.util.AssertionErrors.assertEquals(AssertionErrors.java:122)
+	at org.springframework.test.web.servlet.result.StatusResultMatchers.lambda$matcher$9(StatusResultMatchers.java:637)
+	at org.springframework.test.web.servlet.MockMvc$1.andExpect(MockMvc.java:214)
+	at com.scholarops.controller.AuthorizationDenialTest$StudentCannotAccessInstructorEndpoints.studentCannotAssembleQuiz(AuthorizationDenialTest.java:214)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1597)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1597)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1597)
+
+com.scholarops.controller.AuthorizationDenialTest$StudentCannotAccessInstructorEndpoints.studentCannotCreateQuestionBank -- Time elapsed: 0.002 s <<< FAILURE!
+java.lang.AssertionError: Status expected:<403> but was:<500>
+	at org.springframework.test.util.AssertionErrors.fail(AssertionErrors.java:59)
+	at org.springframework.test.util.AssertionErrors.assertEquals(AssertionErrors.java:122)
+	at org.springframework.test.web.servlet.result.StatusResultMatchers.lambda$matcher$9(StatusResultMatchers.java:637)
+	at org.springframework.test.web.servlet.MockMvc$1.andExpect(MockMvc.java:214)
+	at com.scholarops.controller.AuthorizationDenialTest$StudentCannotAccessInstructorEndpoints.studentCannotCreateQuestionBank(AuthorizationDenialTest.java:249)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1597)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1597)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1597)
+
+com.scholarops.controller.AuthorizationDenialTest$StudentCannotAccessInstructorEndpoints.studentCannotGrade -- Time elapsed: 0.003 s <<< FAILURE!
+java.lang.AssertionError: Status expected:<403> but was:<400>
+	at org.springframework.test.util.AssertionErrors.fail(AssertionErrors.java:59)
+	at org.springframework.test.util.AssertionErrors.assertEquals(AssertionErrors.java:122)
+	at org.springframework.test.web.servlet.result.StatusResultMatchers.lambda$matcher$9(StatusResultMatchers.java:637)
+	at org.springframework.test.web.servlet.MockMvc$1.andExpect(MockMvc.java:214)
+	at com.scholarops.controller.AuthorizationDenialTest$StudentCannotAccessInstructorEndpoints.studentCannotGrade(AuthorizationDenialTest.java:268)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1597)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1597)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1597)
+
+com.scholarops.controller.AuthorizationDenialTest$StudentCannotAccessInstructorEndpoints.studentCannotListQuizzesAsInstructor -- Time elapsed: 0.004 s <<< FAILURE!
+java.lang.AssertionError: Status expected:<403> but was:<500>
+	at org.springframework.test.util.AssertionErrors.fail(AssertionErrors.java:59)
+	at org.springframework.test.util.AssertionErrors.assertEquals(AssertionErrors.java:122)
+	at org.springframework.test.web.servlet.result.StatusResultMatchers.lambda$matcher$9(StatusResultMatchers.java:637)
+	at org.springframework.test.web.servlet.MockMvc$1.andExpect(MockMvc.java:214)
+	at com.scholarops.controller.AuthorizationDenialTest$StudentCannotAccessInstructorEndpoints.studentCannotListQuizzesAsInstructor(AuthorizationDenialTest.java:222)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1597)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1597)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1597)
+
+com.scholarops.controller.AuthorizationDenialTest$StudentCannotAccessInstructorEndpoints.studentCannotAccessQuestionBanks -- Time elapsed: 0.002 s <<< FAILURE!
+java.lang.AssertionError: Status expected:<403> but was:<500>
+	at org.springframework.test.util.AssertionErrors.fail(AssertionErrors.java:59)
+	at org.springframework.test.util.AssertionErrors.assertEquals(AssertionErrors.java:122)
+	at org.springframework.test.web.servlet.result.StatusResultMatchers.lambda$matcher$9(StatusResultMatchers.java:637)
+	at org.springframework.test.web.servlet.MockMvc$1.andExpect(MockMvc.java:214)
+	at com.scholarops.controller.AuthorizationDenialTest$StudentCannotAccessInstructorEndpoints.studentCannotAccessQuestionBanks(AuthorizationDenialTest.java:238)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1597)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1597)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1597)
+
+com.scholarops.controller.AuthorizationDenialTest$StudentCannotAccessInstructorEndpoints.studentCannotAccessGradingQueue -- Time elapsed: 0.003 s <<< FAILURE!
+java.lang.AssertionError: Status expected:<403> but was:<200>
+	at org.springframework.test.util.AssertionErrors.fail(AssertionErrors.java:59)
+	at org.springframework.test.util.AssertionErrors.assertEquals(AssertionErrors.java:122)
+	at org.springframework.test.web.servlet.result.StatusResultMatchers.lambda$matcher$9(StatusResultMatchers.java:637)
+	at org.springframework.test.web.servlet.MockMvc$1.andExpect(MockMvc.java:214)
+	at com.scholarops.controller.AuthorizationDenialTest$StudentCannotAccessInstructorEndpoints.studentCannotAccessGradingQueue(AuthorizationDenialTest.java:257)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1597)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1597)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1597)
+
+com.scholarops.controller.AuthorizationDenialTest$StudentCannotAccessInstructorEndpoints.studentCannotAccessPlagiarism -- Time elapsed: 0.002 s <<< FAILURE!
+java.lang.AssertionError: Status expected:<403> but was:<200>
+	at org.springframework.test.util.AssertionErrors.fail(AssertionErrors.java:59)
+	at org.springframework.test.util.AssertionErrors.assertEquals(AssertionErrors.java:122)
+	at org.springframework.test.web.servlet.result.StatusResultMatchers.lambda$matcher$9(StatusResultMatchers.java:637)
+	at org.springframework.test.web.servlet.MockMvc$1.andExpect(MockMvc.java:214)
+	at com.scholarops.controller.AuthorizationDenialTest$StudentCannotAccessInstructorEndpoints.studentCannotAccessPlagiarism(AuthorizationDenialTest.java:276)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1597)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1597)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1597)
+
+com.scholarops.controller.AuthorizationDenialTest$StudentCannotAccessInstructorEndpoints.studentCannotPublishQuiz -- Time elapsed: 0.003 s <<< FAILURE!
+java.lang.AssertionError: Status expected:<403> but was:<500>
+	at org.springframework.test.util.AssertionErrors.fail(AssertionErrors.java:59)
+	at org.springframework.test.util.AssertionErrors.assertEquals(AssertionErrors.java:122)
+	at org.springframework.test.web.servlet.result.StatusResultMatchers.lambda$matcher$9(StatusResultMatchers.java:637)
+	at org.springframework.test.web.servlet.MockMvc$1.andExpect(MockMvc.java:214)
+	at com.scholarops.controller.AuthorizationDenialTest$StudentCannotAccessInstructorEndpoints.studentCannotPublishQuiz(AuthorizationDenialTest.java:230)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1597)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1597)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1597)
+

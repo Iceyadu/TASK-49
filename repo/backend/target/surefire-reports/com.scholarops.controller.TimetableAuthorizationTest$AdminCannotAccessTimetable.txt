@@ -1,0 +1,76 @@
+-------------------------------------------------------------------------------
+Test set: com.scholarops.controller.TimetableAuthorizationTest$AdminCannotAccessTimetable
+-------------------------------------------------------------------------------
+Tests run: 6, Failures: 6, Errors: 0, Skipped: 0, Time elapsed: 0.164 s <<< FAILURE! -- in com.scholarops.controller.TimetableAuthorizationTest$AdminCannotAccessTimetable
+com.scholarops.controller.TimetableAuthorizationTest$AdminCannotAccessTimetable.adminCannotListSchedules -- Time elapsed: 0.005 s <<< FAILURE!
+java.lang.AssertionError: Status expected:<403> but was:<500>
+	at org.springframework.test.util.AssertionErrors.fail(AssertionErrors.java:59)
+	at org.springframework.test.util.AssertionErrors.assertEquals(AssertionErrors.java:122)
+	at org.springframework.test.web.servlet.result.StatusResultMatchers.lambda$matcher$9(StatusResultMatchers.java:637)
+	at org.springframework.test.web.servlet.MockMvc$1.andExpect(MockMvc.java:214)
+	at com.scholarops.controller.TimetableAuthorizationTest$AdminCannotAccessTimetable.adminCannotListSchedules(TimetableAuthorizationTest.java:139)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1597)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1597)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1597)
+
+com.scholarops.controller.TimetableAuthorizationTest$AdminCannotAccessTimetable.adminCannotCreateSchedule -- Time elapsed: 0.009 s <<< FAILURE!
+java.lang.AssertionError: Status expected:<403> but was:<500>
+	at org.springframework.test.util.AssertionErrors.fail(AssertionErrors.java:59)
+	at org.springframework.test.util.AssertionErrors.assertEquals(AssertionErrors.java:122)
+	at org.springframework.test.web.servlet.result.StatusResultMatchers.lambda$matcher$9(StatusResultMatchers.java:637)
+	at org.springframework.test.web.servlet.MockMvc$1.andExpect(MockMvc.java:214)
+	at com.scholarops.controller.TimetableAuthorizationTest$AdminCannotAccessTimetable.adminCannotCreateSchedule(TimetableAuthorizationTest.java:155)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1597)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1597)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1597)
+
+com.scholarops.controller.TimetableAuthorizationTest$AdminCannotAccessTimetable.adminCannotCreateLockedPeriod -- Time elapsed: 0.005 s <<< FAILURE!
+java.lang.AssertionError: Status expected:<403> but was:<500>
+	at org.springframework.test.util.AssertionErrors.fail(AssertionErrors.java:59)
+	at org.springframework.test.util.AssertionErrors.assertEquals(AssertionErrors.java:122)
+	at org.springframework.test.web.servlet.result.StatusResultMatchers.lambda$matcher$9(StatusResultMatchers.java:637)
+	at org.springframework.test.web.servlet.MockMvc$1.andExpect(MockMvc.java:214)
+	at com.scholarops.controller.TimetableAuthorizationTest$AdminCannotAccessTimetable.adminCannotCreateLockedPeriod(TimetableAuthorizationTest.java:182)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1597)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1597)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1597)
+
+com.scholarops.controller.TimetableAuthorizationTest$AdminCannotAccessTimetable.adminCannotDeleteSchedule -- Time elapsed: 0.004 s <<< FAILURE!
+java.lang.AssertionError: Status expected:<403> but was:<500>
+	at org.springframework.test.util.AssertionErrors.fail(AssertionErrors.java:59)
+	at org.springframework.test.util.AssertionErrors.assertEquals(AssertionErrors.java:122)
+	at org.springframework.test.web.servlet.result.StatusResultMatchers.lambda$matcher$9(StatusResultMatchers.java:637)
+	at org.springframework.test.web.servlet.MockMvc$1.andExpect(MockMvc.java:214)
+	at com.scholarops.controller.TimetableAuthorizationTest$AdminCannotAccessTimetable.adminCannotDeleteSchedule(TimetableAuthorizationTest.java:163)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1597)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1597)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1597)
+
+com.scholarops.controller.TimetableAuthorizationTest$AdminCannotAccessTimetable.adminCannotDeleteLockedPeriod -- Time elapsed: 0.003 s <<< FAILURE!
+java.lang.AssertionError: Status expected:<403> but was:<500>
+	at org.springframework.test.util.AssertionErrors.fail(AssertionErrors.java:59)
+	at org.springframework.test.util.AssertionErrors.assertEquals(AssertionErrors.java:122)
+	at org.springframework.test.web.servlet.result.StatusResultMatchers.lambda$matcher$9(StatusResultMatchers.java:637)
+	at org.springframework.test.web.servlet.MockMvc$1.andExpect(MockMvc.java:214)
+	at com.scholarops.controller.TimetableAuthorizationTest$AdminCannotAccessTimetable.adminCannotDeleteLockedPeriod(TimetableAuthorizationTest.java:190)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1597)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1597)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1597)
+
+com.scholarops.controller.TimetableAuthorizationTest$AdminCannotAccessTimetable.adminCannotManageLockedPeriods -- Time elapsed: 0.003 s <<< FAILURE!
+java.lang.AssertionError: Status expected:<403> but was:<500>
+	at org.springframework.test.util.AssertionErrors.fail(AssertionErrors.java:59)
+	at org.springframework.test.util.AssertionErrors.assertEquals(AssertionErrors.java:122)
+	at org.springframework.test.web.servlet.result.StatusResultMatchers.lambda$matcher$9(StatusResultMatchers.java:637)
+	at org.springframework.test.web.servlet.MockMvc$1.andExpect(MockMvc.java:214)
+	at com.scholarops.controller.TimetableAuthorizationTest$AdminCannotAccessTimetable.adminCannotManageLockedPeriods(TimetableAuthorizationTest.java:171)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1597)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1597)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1597)
+

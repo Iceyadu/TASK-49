@@ -1,0 +1,59 @@
+server:
+  port: 8080
+  servlet:
+    context-path: /
+
+spring:
+  application:
+    name: scholarops-backend
+  datasource:
+    url: jdbc:mysql://${DB_HOST:localhost}:${DB_PORT:3306}/${DB_NAME:scholarops}?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
+    username: ${DB_USERNAME:scholarops}
+    password: ${DB_PASSWORD:scholarops_secret}
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    hikari:
+      maximum-pool-size: 20
+      minimum-idle: 5
+      idle-timeout: 300000
+      connection-timeout: 20000
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    show-sql: false
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.MySQLDialect
+        format_sql: false
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+    baseline-on-migrate: true
+  jackson:
+    serialization:
+      write-dates-as-timestamps: false
+    default-property-inclusion: non_null
+
+scholarops:
+  jwt:
+    secret: ${JWT_SECRET}
+    expiration-ms: 3600000
+    refresh-expiration-ms: 86400000
+  aes:
+    secret-key: ${SCHOLAROPS_AES_KEY}
+  crawl:
+    default-rate-limit-per-minute: 30
+    max-concurrent-jobs: 5
+    storage-path: ${CRAWL_STORAGE:/data/crawl-storage}
+  plagiarism:
+    similarity-threshold: 0.85
+    ngram-size: 5
+    window-size: 4
+  autosave:
+    interval-seconds: 15
+
+logging:
+  level:
+    com.scholarops: INFO
+    org.springframework.security: WARN
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"

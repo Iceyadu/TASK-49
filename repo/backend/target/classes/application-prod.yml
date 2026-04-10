@@ -1,0 +1,16 @@
+spring:
+  jpa:
+    show-sql: false
+  flyway:
+    clean-disabled: true
+
+scholarops:
+  jwt:
+    secret: ${JWT_SECRET}
+  aes:
+    secret-key: ${SCHOLAROPS_AES_KEY}
+
+logging:
+  level:
+    com.scholarops: WARN
+    org.springframework.security: WARN

@@ -1,0 +1,7 @@
+**/node_modules
+**/target
+**/.git
+**/.idea
+**/*.iml
+frontend/dist
+.DS_Store
