@@ -37,6 +37,7 @@
 /Users/mac/Documents/EaglePoint/TASK-49/repo/backend/src/main/java/com/scholarops/model/entity/PlagiarismMatch.java
 /Users/mac/Documents/EaglePoint/TASK-49/repo/backend/src/main/java/com/scholarops/model/entity/Role.java
 /Users/mac/Documents/EaglePoint/TASK-49/repo/backend/src/main/java/com/scholarops/exception/PasswordPolicyViolationException.java
+/Users/mac/Documents/EaglePoint/TASK-49/repo/backend/src/main/java/com/scholarops/security/AnonymousAwareAccessDeniedHandler.java
 /Users/mac/Documents/EaglePoint/TASK-49/repo/backend/src/main/java/com/scholarops/repository/RubricScoreRepository.java
 /Users/mac/Documents/EaglePoint/TASK-49/repo/backend/src/main/java/com/scholarops/model/dto/ContentPublishRequest.java
 /Users/mac/Documents/EaglePoint/TASK-49/repo/backend/src/main/java/com/scholarops/repository/QuizRuleRepository.java

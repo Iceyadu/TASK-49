@@ -18,6 +18,7 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -78,17 +79,24 @@ public class AuthService {
                     .map(authority -> authority.startsWith("ROLE_") ? authority.substring(5) : authority)
                     .collect(Collectors.toList());
 
-            List<String> permissions = List.copyOf(userDetails.getPermissions());
+            List<String> permissions = userDetails.getPermissions() == null
+                    ? List.of()
+                    : List.copyOf(userDetails.getPermissions());
 
-            auditLogService.log(
-                    userDetails.getId(),
-                    AuditAction.LOGIN_SUCCESS,
-                    "User",
-                    userDetails.getId(),
-                    "User logged in successfully",
-                    null,
-                    null
-            );
+            try {
+                auditLogService.log(
+                        userDetails.getId(),
+                        AuditAction.LOGIN_SUCCESS,
+                        "User",
+                        userDetails.getId(),
+                        "User logged in successfully",
+                        null,
+                        null
+                );
+            } catch (Exception auditEx) {
+                logger.warn("Failed to record login success audit for userId={}: {}", userDetails.getId(),
+                        auditEx.getMessage());
+            }
 
             logger.info("User '{}' logged in successfully", loginRequest.getUsername());
 
@@ -108,8 +116,8 @@ public class AuthService {
         } catch (AuthenticationException ex) {
             logger.warn("Login failed for username: {}", loginRequest.getUsername());
 
-            // Try to find user to log the failed attempt
-            userRepository.findByUsername(loginRequest.getUsername()).ifPresent(user ->
+            userRepository.findByUsername(loginRequest.getUsername()).ifPresent(user -> {
+                try {
                     auditLogService.log(
                             user.getId(),
                             AuditAction.LOGIN_FAILURE,
@@ -118,8 +126,12 @@ public class AuthService {
                             "Login attempt failed: " + ex.getMessage(),
                             null,
                             null
-                    )
-            );
+                    );
+                } catch (Exception auditEx) {
+                    logger.warn("Failed to record login failure audit for userId={}: {}", user.getId(),
+                            auditEx.getMessage());
+                }
+            });
 
             throw ex;
         }
@@ -130,7 +142,12 @@ public class AuthService {
         // Atomically validate, extract userId, and blacklist the old refresh token
         // to prevent TOCTOU race conditions in concurrent refresh attempts
         Long userId = jwtTokenProvider.validateAndBlacklistRefreshToken(refreshToken);
-        UserDetailsImpl userDetails = (UserDetailsImpl) userDetailsService.loadUserById(userId);
+        UserDetailsImpl userDetails;
+        try {
+            userDetails = (UserDetailsImpl) userDetailsService.loadUserById(userId);
+        } catch (UsernameNotFoundException e) {
+            throw new IllegalArgumentException("Invalid refresh token", e);
+        }
 
         Authentication authentication = new UsernamePasswordAuthenticationToken(
                 userDetails, null, userDetails.getAuthorities());
