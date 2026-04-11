@@ -38,11 +38,22 @@ Optional: `FRONTEND_PORT=3000 docker compose up --build` to map the UI to anothe
 Images are built from `docker/Dockerfile.backend` (Maven) and `docker/Dockerfile.frontend` (npm + nginx), so you do **not** need a prebuilt JAR or `frontend/dist` on the host.
 
 ## Tests
-### Backend
+### Full suite (default: Docker)
+From `repo/`, **`./run_tests.sh` runs inside the test container** (JDK 17 + Maven + Node 20) so CI and laptops share the same toolchain. It builds/runs `docker-compose.test.yml` → `test-runner` automatically.
+
+```bash
+./run_tests.sh
+```
+
+- **Run on the host instead** (local `mvn` / `npm`): `RUN_TESTS_USE_DOCKER=0 ./run_tests.sh`
+- **API/curl tests** use `API_BASE_URL` (default inside Docker: `http://host.docker.internal:8080`). Start the app stack first (`docker compose up -d`) if you want those checks to hit a live backend; otherwise API steps are skipped when unreachable.
+- Optional wrapper: `./docker/run-tests-in-docker.sh` (same as `./run_tests.sh`).
+
+### Backend only (host)
 - `cd backend`
 - `./mvnw test` (or `mvn test`)
 
-### Frontend
+### Frontend only (host)
 - `cd frontend`
 - `npm test`
 

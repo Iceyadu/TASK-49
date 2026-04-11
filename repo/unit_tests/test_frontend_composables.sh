@@ -14,16 +14,28 @@ fi
 
 cd "$FRONTEND_DIR"
 
-if [ ! -d node_modules ]; then
-    echo "  Installing dependencies ..."
-    npm install --silent 2>/dev/null || true
+if [ ! -d node_modules ] || [ ! -x node_modules/.bin/vitest ]; then
+    echo "  Installing npm dependencies ..."
+    if [ -f package-lock.json ]; then
+        npm ci
+    else
+        npm install
+    fi
 fi
 
-if npx vitest run --config tests/vitest.config.ts 2>/dev/null; then
+run_vitest() {
+    if [ -x node_modules/.bin/vitest ]; then
+        node_modules/.bin/vitest run --config tests/vitest.config.ts "$@"
+    else
+        npx --yes vitest run --config tests/vitest.config.ts "$@"
+    fi
+}
+
+if run_vitest; then
     echo "  PASS  Frontend unit tests (auth store, composables, validators, formatters)"
     PASS=$((PASS + 1))
 else
-    echo "  FAIL  Frontend unit tests"
+    echo "  FAIL  Frontend unit tests (see Vitest output above)"
     FAIL=$((FAIL + 1))
 fi
 

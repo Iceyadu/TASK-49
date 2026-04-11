@@ -2,6 +2,22 @@
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+
+# Run the suite inside the test Docker image by default (Maven + Node toolchain).
+# Already inside the container: compose sets RUN_TESTS_IN_CONTAINER=1.
+# Opt out: RUN_TESTS_USE_DOCKER=0 ./run_tests.sh
+if [ -z "${RUN_TESTS_IN_CONTAINER:-}" ] && [ "${RUN_TESTS_USE_DOCKER:-1}" != "0" ]; then
+    if command -v docker >/dev/null 2>&1 && docker info >/dev/null 2>&1; then
+        if [ -f "$SCRIPT_DIR/docker-compose.test.yml" ] && [ -f "$SCRIPT_DIR/docker/Dockerfile.test" ]; then
+            cd "$SCRIPT_DIR"
+            exec docker compose -f docker-compose.test.yml run --rm \
+                -e "API_BASE_URL=${API_BASE_URL:-http://host.docker.internal:8080}" \
+                test-runner
+        fi
+    fi
+    echo -e "\033[1;33m[TEST]\033[0m Docker unavailable or test image files missing — running tests on the host"
+fi
+
 PASS=0
 FAIL=0
 SKIP=0
@@ -48,15 +64,19 @@ run_frontend_tests() {
     log "Running frontend unit tests (Vitest) ..."
     if [ -f "$SCRIPT_DIR/frontend/package.json" ]; then
         pushd "$SCRIPT_DIR/frontend" > /dev/null
-        if [ ! -d node_modules ]; then
+        if [ ! -d node_modules ] || [ ! -x node_modules/.bin/vitest ]; then
             log "  Installing npm dependencies ..."
-            npm install --silent 2>/dev/null || true
+            if [ -f package-lock.json ]; then
+                npm ci
+            else
+                npm install
+            fi
         fi
-        if npx vitest run --config tests/vitest.config.ts 2>/dev/null; then
-            pass "frontend-unit-tests"
+        if [ -x node_modules/.bin/vitest ]; then
+            node_modules/.bin/vitest run --config tests/vitest.config.ts
         else
-            fail "frontend-unit-tests"
-        fi
+            npx --yes vitest run --config tests/vitest.config.ts
+        fi && pass "frontend-unit-tests" || fail "frontend-unit-tests"
         popd > /dev/null
     else
         skip "frontend-unit-tests (package.json not found)"

@@ -1,0 +1,27 @@
+# Test-runner image: JDK/Maven + Node/Vitest + bash. Invoked automatically by ./run_tests.sh.
+#
+# Manual run (same as ./run_tests.sh):
+#   docker compose -f docker-compose.test.yml run --rm test-runner
+#
+# Host-only tests: RUN_TESTS_USE_DOCKER=0 ./run_tests.sh
+#
+# API tests default to host.docker.internal:8080; start the app stack or set API_BASE_URL.
+
+services:
+  test-runner:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.test
+    image: scholarops-test:local
+    container_name: scholarops-test-runner
+    working_dir: /workspace
+    volumes:
+      - .:/workspace
+    environment:
+      CI: "true"
+      # Prevents run_tests.sh from re-invoking Docker when already inside this container.
+      RUN_TESTS_IN_CONTAINER: "1"
+      API_BASE_URL: ${API_BASE_URL:-http://host.docker.internal:8080}
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    command: ["bash", "run_tests.sh"]

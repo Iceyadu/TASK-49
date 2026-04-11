@@ -15,8 +15,8 @@ com/scholarops/service/SubmissionServiceTest.class
 com/scholarops/util/AddressNormalizerTest.class
 com/scholarops/util/LanguageDetectorTest.class
 com/scholarops/service/PlagiarismServiceTest.class
-com/scholarops/util/FingerprintUtilTest.class
 com/scholarops/controller/SubmissionControllerTest.class
+com/scholarops/util/FingerprintUtilTest.class
 com/scholarops/controller/ScheduleControllerTest.class
 com/scholarops/service/AuthServiceTest.class
 com/scholarops/service/CrawlRuleServiceTest.class
