@@ -63,6 +63,22 @@ services:
     networks:
       - scholarops-net
 
+  test-runner:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.test
+    image: scholarops-test:local
+    container_name: scholarops-test-runner
+    working_dir: /workspace
+    volumes:
+      - .:/workspace
+    environment:
+      CI: "true"
+      API_BASE_URL: ${API_BASE_URL:-http://host.docker.internal:8080}
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    command: ["bash", "docker/run-tests-in-container.sh"]
+
 volumes:
   mysql-data:
   crawl-storage:

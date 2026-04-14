@@ -1,4 +1,4 @@
-# Toolchain image for running repo/run_tests.sh (Maven backend tests + npm/Vitest frontend + shell unit_tests).
+# Toolchain image for Docker-only test execution (Maven + Node/Vitest).
 # Build context: repository root (same as Dockerfile.backend).
 FROM maven:3.9-eclipse-temurin-17
 
