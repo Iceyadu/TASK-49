@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.scholarops.exception.ResourceNotFoundException;
 import com.scholarops.model.entity.MediaMetadata;
 import com.scholarops.model.entity.StandardizedContentRecord;
+import com.scholarops.controller.support.AbstractWebMvcControllerTest;
 import com.scholarops.security.JwtAuthenticationFilter;
 import com.scholarops.security.JwtTokenProvider;
 import com.scholarops.service.CatalogService;
@@ -18,7 +19,6 @@ import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.FilterType;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
-import org.springframework.security.access.PermissionEvaluator;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.web.servlet.MockMvc;
@@ -43,7 +43,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
         value = {CatalogController.class, ContentController.class},
         excludeFilters = @ComponentScan.Filter(type = FilterType.ASSIGNABLE_TYPE,
                 classes = JwtAuthenticationFilter.class))
-class CatalogAccessTest {
+class CatalogAccessTest extends AbstractWebMvcControllerTest {
 
     @Autowired private MockMvc mockMvc;
     @Autowired private ObjectMapper objectMapper;
@@ -51,7 +51,6 @@ class CatalogAccessTest {
     @MockBean private CatalogService catalogService;
     @MockBean private ContentStandardizationService contentStandardizationService;
     @MockBean private JwtTokenProvider jwtTokenProvider;
-    @MockBean private PermissionEvaluator permissionEvaluator;
 
     // -----------------------------------------------------------------------
     // Catalog access with CONTENT_VIEW permission (any authenticated role)

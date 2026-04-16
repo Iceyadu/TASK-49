@@ -20,15 +20,17 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
-    networks:
-      - scholarops-net
 
   backend:
-    build:
-      context: .
-      dockerfile: docker/Dockerfile.backend
-    image: scholarops-backend:local
+    image: maven:3.9.6-eclipse-temurin-17
     container_name: scholarops-backend
+    working_dir: /repo/backend
+    command: sh -lc "mvn -q spring-boot:run"
+    volumes:
+      - ./:/repo
+    depends_on:
+      mysql:
+        condition: service_healthy
     environment:
       DB_HOST: mysql
       DB_PORT: 3306
@@ -37,52 +39,23 @@ services:
       DB_PASSWORD: ${DB_PASSWORD:-scholarops_secret}
       JWT_SECRET: ${JWT_SECRET:-c2Nob2xhcm9wcy1vZmZsaW5lLWxlYXJuaW5nLXN5c3RlbS1zZWNyZXQta2V5LW11c3QtYmUtYXQtbGVhc3QtMjU2LWJpdHM=}
       SCHOLAROPS_AES_KEY: ${AES_KEY:-0123456789abcdef0123456789abcdef}
-      CRAWL_STORAGE: /data/crawl-storage
-      SPRING_PROFILES_ACTIVE: prod
     ports:
       - "8080:8080"
-    volumes:
-      - crawl-storage:/data/crawl-storage
-    depends_on:
-      mysql:
-        condition: service_healthy
-    networks:
-      - scholarops-net
 
   frontend:
-    build:
-      context: .
-      dockerfile: docker/Dockerfile.frontend
-    image: scholarops-frontend:local
+    image: node:20-alpine
     container_name: scholarops-frontend
-    ports:
-      # Default 8088 avoids conflict with local services bound to host port 80.
-      - "${FRONTEND_PORT:-8088}:80"
-    depends_on:
-      - backend
-    networks:
-      - scholarops-net
-
-  test-runner:
-    build:
-      context: .
-      dockerfile: docker/Dockerfile.test
-    image: scholarops-test:local
-    container_name: scholarops-test-runner
-    working_dir: /workspace
+    working_dir: /repo/frontend
+    command: sh -lc "npm ci && npm run dev -- --host 0.0.0.0 --port 5173"
     volumes:
-      - .:/workspace
+      - ./:/repo
+    depends_on:
+      backend:
+        condition: service_started
     environment:
-      CI: "true"
-      API_BASE_URL: ${API_BASE_URL:-http://host.docker.internal:8080}
-    extra_hosts:
-      - "host.docker.internal:host-gateway"
-    command: ["bash", "docker/run-tests-in-container.sh"]
+      VITE_API_BASE_URL: http://backend:8080
+    ports:
+      - "5173:5173"
 
 volumes:
   mysql-data:
-  crawl-storage:
-
-networks:
-  scholarops-net:
-    driver: bridge

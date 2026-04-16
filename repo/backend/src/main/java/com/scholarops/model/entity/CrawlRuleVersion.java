@@ -1,5 +1,6 @@
 package com.scholarops.model.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.*;
 import java.time.LocalDateTime;
@@ -14,6 +15,7 @@ public class CrawlRuleVersion {
     private Long id;
 
     @ManyToOne(fetch = FetchType.LAZY)
+    @JsonIgnore
     @JoinColumn(name = "source_profile_id", nullable = false)
     private CrawlSourceProfile sourceProfile;
 
@@ -37,6 +39,7 @@ public class CrawlRuleVersion {
     private Boolean isActive = false;
 
     @ManyToOne(fetch = FetchType.LAZY)
+    @JsonIgnore
     @JoinColumn(name = "created_by", nullable = false)
     private User createdBy;
 

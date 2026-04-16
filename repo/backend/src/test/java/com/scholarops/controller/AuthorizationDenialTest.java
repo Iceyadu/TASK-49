@@ -1,5 +1,6 @@
 package com.scholarops.controller;
 
+import com.scholarops.controller.support.AbstractWebMvcControllerTest;
 import com.scholarops.security.JwtAuthenticationFilter;
 import com.scholarops.security.JwtTokenProvider;
 import com.scholarops.service.*;
@@ -14,14 +15,12 @@ import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.FilterType;
 import org.springframework.http.MediaType;
-import org.springframework.security.access.PermissionEvaluator;
-import org.springframework.security.core.Authentication;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.web.servlet.MockMvc;
 
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.when;
+import static com.scholarops.controller.support.WebMvcTestUsers.userDetails;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -49,7 +48,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
         },
         excludeFilters = @ComponentScan.Filter(type = FilterType.ASSIGNABLE_TYPE,
                 classes = JwtAuthenticationFilter.class))
-class AuthorizationDenialTest {
+class AuthorizationDenialTest extends AbstractWebMvcControllerTest {
 
     @Autowired private MockMvc mockMvc;
 
@@ -69,12 +68,10 @@ class AuthorizationDenialTest {
     @MockBean private WrongAnswerHistoryRepository wrongAnswerHistoryRepository;
 
     @MockBean private JwtTokenProvider jwtTokenProvider;
-    @MockBean private PermissionEvaluator permissionEvaluator;
 
     @BeforeEach
     void grantAllPermissions() {
-        when(permissionEvaluator.hasPermission(any(Authentication.class), any(), any()))
-                .thenReturn(true);
+        grantAllEvaluatorPermissions();
     }
 
     // -----------------------------------------------------------------------
@@ -128,7 +125,7 @@ class AuthorizationDenialTest {
             mockMvc.perform(post("/api/schedules/1/move")
                             .with(csrf())
                             .contentType(MediaType.APPLICATION_JSON)
-                            .content("{\"newStartTime\":\"2024-06-01T09:00\",\"newEndTime\":\"2024-06-01T10:00\"}"))
+                            .content("{\"scheduleId\":\"00000000-0000-0000-0000-000000000001\",\"newStartTime\":\"2024-06-01T09:00\",\"newEndTime\":\"2024-06-01T10:00\"}"))
                     .andExpect(status().isUnauthorized());
         }
 
@@ -204,46 +201,46 @@ class AuthorizationDenialTest {
     class StudentCannotAccessInstructorEndpoints {
 
         @Test
-        @WithMockUser(roles = "STUDENT")
         @DisplayName("Student cannot assemble quizzes")
         void studentCannotAssembleQuiz() throws Exception {
             mockMvc.perform(post("/api/quizzes/assemble")
                             .with(csrf())
+                            .with(user(userDetails(10L, "student", "STUDENT", "QUIZ_TAKE")))
                             .contentType(MediaType.APPLICATION_JSON)
                             .content("{\"questionBankId\":1,\"title\":\"Q\",\"totalQuestions\":5}"))
                     .andExpect(status().isForbidden());
         }
 
         @Test
-        @WithMockUser(roles = "STUDENT")
         @DisplayName("Student cannot list quizzes as instructor")
         void studentCannotListQuizzesAsInstructor() throws Exception {
-            mockMvc.perform(get("/api/quizzes"))
+            mockMvc.perform(get("/api/quizzes")
+                            .with(user(userDetails(10L, "student", "STUDENT", "QUIZ_TAKE"))))
                     .andExpect(status().isForbidden());
         }
 
         @Test
-        @WithMockUser(roles = "STUDENT")
         @DisplayName("Student cannot publish quizzes")
         void studentCannotPublishQuiz() throws Exception {
-            mockMvc.perform(put("/api/quizzes/1/publish").with(csrf()))
+            mockMvc.perform(put("/api/quizzes/1/publish").with(csrf())
+                            .with(user(userDetails(10L, "student", "STUDENT", "QUIZ_TAKE"))))
                     .andExpect(status().isForbidden());
         }
 
         @Test
-        @WithMockUser(roles = "STUDENT")
         @DisplayName("Student cannot access question banks")
         void studentCannotAccessQuestionBanks() throws Exception {
-            mockMvc.perform(get("/api/question-banks"))
+            mockMvc.perform(get("/api/question-banks")
+                            .with(user(userDetails(10L, "student", "STUDENT", "QUIZ_TAKE"))))
                     .andExpect(status().isForbidden());
         }
 
         @Test
-        @WithMockUser(roles = "STUDENT")
         @DisplayName("Student cannot create question banks")
         void studentCannotCreateQuestionBank() throws Exception {
             mockMvc.perform(post("/api/question-banks")
                             .with(csrf())
+                            .with(user(userDetails(10L, "student", "STUDENT", "QUIZ_TAKE")))
                             .contentType(MediaType.APPLICATION_JSON)
                             .content("{\"name\":\"Bank\",\"description\":\"desc\",\"subject\":\"Math\"}"))
                     .andExpect(status().isForbidden());
@@ -258,13 +255,13 @@ class AuthorizationDenialTest {
         }
 
         @Test
-        @WithMockUser(roles = "STUDENT")
         @DisplayName("Student cannot grade submissions")
         void studentCannotGrade() throws Exception {
             mockMvc.perform(post("/api/grading/submissions/1/grade")
                             .with(csrf())
+                            .with(user(userDetails(10L, "student", "STUDENT", "QUIZ_TAKE")))
                             .contentType(MediaType.APPLICATION_JSON)
-                            .content("{\"score\":8.0,\"feedback\":\"Good\"}"))
+                            .content("{\"submissionAnswerId\":\"00000000-0000-0000-0000-000000000001\",\"score\":8.0,\"feedback\":\"Good\"}"))
                     .andExpect(status().isForbidden());
         }
 
@@ -293,13 +290,13 @@ class AuthorizationDenialTest {
         }
 
         @Test
-        @WithMockUser(roles = "STUDENT")
         @DisplayName("Student cannot create users")
         void studentCannotCreateUser() throws Exception {
             mockMvc.perform(post("/api/users")
                             .with(csrf())
+                            .with(user(userDetails(10L, "student", "STUDENT", "QUIZ_TAKE")))
                             .contentType(MediaType.APPLICATION_JSON)
-                            .content("{\"username\":\"new\",\"email\":\"a@b.com\",\"password\":\"pass\"}"))
+                            .content("{\"username\":\"newuser\",\"email\":\"a@b.com\",\"password\":\"Password1!\",\"fullName\":\"New User\"}"))
                     .andExpect(status().isForbidden());
         }
 
@@ -312,11 +309,11 @@ class AuthorizationDenialTest {
         }
 
         @Test
-        @WithMockUser(roles = "STUDENT")
         @DisplayName("Student cannot assign roles")
         void studentCannotAssignRoles() throws Exception {
             mockMvc.perform(post("/api/users/1/roles")
                             .with(csrf())
+                            .with(user(userDetails(10L, "student", "STUDENT", "QUIZ_TAKE")))
                             .contentType(MediaType.APPLICATION_JSON)
                             .content("{\"roleId\":1}"))
                     .andExpect(status().isForbidden());
@@ -355,22 +352,22 @@ class AuthorizationDenialTest {
         }
 
         @Test
-        @WithMockUser(roles = "INSTRUCTOR")
         @DisplayName("Instructor cannot create users")
         void instructorCannotCreateUser() throws Exception {
             mockMvc.perform(post("/api/users")
                             .with(csrf())
+                            .with(user(userDetails(20L, "instructor", "INSTRUCTOR", "QUIZ_MANAGE")))
                             .contentType(MediaType.APPLICATION_JSON)
-                            .content("{\"username\":\"new\",\"email\":\"a@b.com\",\"password\":\"pass\"}"))
+                            .content("{\"username\":\"newuser\",\"email\":\"a@b.com\",\"password\":\"Password1!\",\"fullName\":\"New User\"}"))
                     .andExpect(status().isForbidden());
         }
 
         @Test
-        @WithMockUser(roles = "INSTRUCTOR")
         @DisplayName("Instructor cannot assign roles")
         void instructorCannotAssignRoles() throws Exception {
             mockMvc.perform(post("/api/users/1/roles")
                             .with(csrf())
+                            .with(user(userDetails(20L, "instructor", "INSTRUCTOR", "QUIZ_MANAGE")))
                             .contentType(MediaType.APPLICATION_JSON)
                             .content("{\"roleId\":1}"))
                     .andExpect(status().isForbidden());
@@ -393,48 +390,48 @@ class AuthorizationDenialTest {
     class AdminCannotAccessStudentEndpoints {
 
         @Test
-        @WithMockUser(roles = "ADMINISTRATOR")
         @DisplayName("Admin cannot start submissions")
         void adminCannotStartSubmission() throws Exception {
-            mockMvc.perform(post("/api/quizzes/1/submissions").with(csrf()))
+            mockMvc.perform(post("/api/quizzes/1/submissions").with(csrf())
+                            .with(user(userDetails(30L, "admin", "ADMINISTRATOR", "USER_MANAGE"))))
                     .andExpect(status().isForbidden());
         }
 
         @Test
-        @WithMockUser(roles = "ADMINISTRATOR")
         @DisplayName("Admin cannot autosave submissions")
         void adminCannotAutosave() throws Exception {
             mockMvc.perform(put("/api/submissions/1/autosave")
                             .with(csrf())
+                            .with(user(userDetails(30L, "admin", "ADMINISTRATOR", "USER_MANAGE")))
                             .contentType(MediaType.APPLICATION_JSON)
                             .content("{\"timeRemainingSeconds\":1800,\"answers\":[]}"))
                     .andExpect(status().isForbidden());
         }
 
         @Test
-        @WithMockUser(roles = "ADMINISTRATOR")
         @DisplayName("Admin cannot manage schedules")
         void adminCannotManageSchedules() throws Exception {
-            mockMvc.perform(get("/api/schedules"))
+            mockMvc.perform(get("/api/schedules")
+                            .with(user(userDetails(30L, "admin", "ADMINISTRATOR", "USER_MANAGE"))))
                     .andExpect(status().isForbidden());
         }
 
         @Test
-        @WithMockUser(roles = "ADMINISTRATOR")
         @DisplayName("Admin cannot view wrong answers")
         void adminCannotViewWrongAnswers() throws Exception {
-            mockMvc.perform(get("/api/wrong-answers"))
+            mockMvc.perform(get("/api/wrong-answers")
+                            .with(user(userDetails(30L, "admin", "ADMINISTRATOR", "USER_MANAGE"))))
                     .andExpect(status().isForbidden());
         }
 
         @Test
-        @WithMockUser(roles = "ADMINISTRATOR")
         @DisplayName("Admin cannot move timetable entries")
         void adminCannotMoveTimetable() throws Exception {
             mockMvc.perform(post("/api/schedules/1/move")
                             .with(csrf())
+                            .with(user(userDetails(30L, "admin", "ADMINISTRATOR", "USER_MANAGE")))
                             .contentType(MediaType.APPLICATION_JSON)
-                            .content("{\"newStartTime\":\"2024-06-01T09:00\",\"newEndTime\":\"2024-06-01T10:00\"}"))
+                            .content("{\"scheduleId\":\"00000000-0000-0000-0000-000000000001\",\"newStartTime\":\"2024-06-01T09:00\",\"newEndTime\":\"2024-06-01T10:00\"}"))
                     .andExpect(status().isForbidden());
         }
     }
@@ -455,18 +452,18 @@ class AuthorizationDenialTest {
         }
 
         @Test
-        @WithMockUser(roles = "INSTRUCTOR")
         @DisplayName("Instructor cannot publish content")
         void instructorCannotPublishContent() throws Exception {
-            mockMvc.perform(post("/api/content/1/publish").with(csrf()))
+            mockMvc.perform(post("/api/content/1/publish").with(csrf())
+                            .with(user(userDetails(20L, "instructor", "INSTRUCTOR", "QUIZ_MANAGE"))))
                     .andExpect(status().isForbidden());
         }
 
         @Test
-        @WithMockUser(roles = "INSTRUCTOR")
         @DisplayName("Instructor cannot manage crawl sources")
         void instructorCannotManageCrawlSources() throws Exception {
-            mockMvc.perform(get("/api/crawl-sources"))
+            mockMvc.perform(get("/api/crawl-sources")
+                            .with(user(userDetails(20L, "instructor", "INSTRUCTOR", "QUIZ_MANAGE"))))
                     .andExpect(status().isForbidden());
         }
     }
@@ -479,34 +476,34 @@ class AuthorizationDenialTest {
     class InstructorCannotAccessStudentEndpoints {
 
         @Test
-        @WithMockUser(roles = "INSTRUCTOR")
         @DisplayName("Instructor cannot start quiz submissions")
         void instructorCannotStartSubmission() throws Exception {
-            mockMvc.perform(post("/api/quizzes/1/submissions").with(csrf()))
+            mockMvc.perform(post("/api/quizzes/1/submissions").with(csrf())
+                            .with(user(userDetails(20L, "instructor", "INSTRUCTOR", "QUIZ_MANAGE"))))
                     .andExpect(status().isForbidden());
         }
 
         @Test
-        @WithMockUser(roles = "INSTRUCTOR")
         @DisplayName("Instructor cannot submit quiz answers")
         void instructorCannotSubmitQuiz() throws Exception {
-            mockMvc.perform(put("/api/submissions/1/submit").with(csrf()))
+            mockMvc.perform(put("/api/submissions/1/submit").with(csrf())
+                            .with(user(userDetails(20L, "instructor", "INSTRUCTOR", "QUIZ_MANAGE"))))
                     .andExpect(status().isForbidden());
         }
 
         @Test
-        @WithMockUser(roles = "INSTRUCTOR")
         @DisplayName("Instructor cannot manage own schedule")
         void instructorCannotManageSchedule() throws Exception {
-            mockMvc.perform(get("/api/schedules"))
+            mockMvc.perform(get("/api/schedules")
+                            .with(user(userDetails(20L, "instructor", "INSTRUCTOR", "QUIZ_MANAGE"))))
                     .andExpect(status().isForbidden());
         }
 
         @Test
-        @WithMockUser(roles = "INSTRUCTOR")
         @DisplayName("Instructor cannot view wrong answers")
         void instructorCannotViewWrongAnswers() throws Exception {
-            mockMvc.perform(get("/api/wrong-answers"))
+            mockMvc.perform(get("/api/wrong-answers")
+                            .with(user(userDetails(20L, "instructor", "INSTRUCTOR", "QUIZ_MANAGE"))))
                     .andExpect(status().isForbidden());
         }
     }

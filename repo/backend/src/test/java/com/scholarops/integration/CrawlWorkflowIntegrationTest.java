@@ -1,85 +1,155 @@
 package com.scholarops.integration;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.scholarops.model.dto.CrawlRuleRequest;
-import com.scholarops.model.entity.CrawlRuleVersion;
-import com.scholarops.model.entity.CrawlSourceProfile;
-import com.scholarops.repository.CrawlRuleVersionRepository;
-import com.scholarops.repository.CrawlSourceProfileRepository;
-import com.scholarops.service.AuditLogService;
-import com.scholarops.service.CrawlRuleService;
-import com.scholarops.service.ParsingService;
+import com.scholarops.model.entity.Role;
+import com.scholarops.model.entity.User;
+import com.scholarops.repository.RoleRepository;
+import com.scholarops.repository.UserRepository;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.http.MediaType;
+import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.MvcResult;
 
 import java.util.Map;
-import java.util.Optional;
 
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyLong;
-import static org.mockito.Mockito.*;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @SpringBootTest
+@AutoConfigureMockMvc
 class CrawlWorkflowIntegrationTest {
 
-    @MockBean private CrawlRuleVersionRepository crawlRuleVersionRepository;
-    @MockBean private CrawlSourceProfileRepository crawlSourceProfileRepository;
-    @MockBean private AuditLogService auditLogService;
+    @Autowired private MockMvc mockMvc;
+    @Autowired private ObjectMapper objectMapper;
+    @Autowired private UserRepository userRepository;
+    @Autowired private RoleRepository roleRepository;
+    @Autowired private PasswordEncoder passwordEncoder;
+    @Autowired private JdbcTemplate jdbcTemplate;
 
-    @Autowired private CrawlRuleService crawlRuleService;
+    @BeforeEach
+    void ensureCuratorRoleUserExists() {
+        User curator = userRepository.findByUsername("curator.integration")
+                .orElseGet(() -> userRepository.save(User.builder()
+                        .username("curator.integration")
+                        .email("curator.integration@scholarops.local")
+                        .fullName("Curator Integration User")
+                        .passwordHash(passwordEncoder.encode("Curator@12345"))
+                        .enabled(true)
+                        .accountLocked(false)
+                        .build()));
+
+        Role curatorRole = roleRepository.findByName("CONTENT_CURATOR")
+                .orElseThrow(() -> new IllegalStateException("CONTENT_CURATOR role not found"));
+        Long roleCount = jdbcTemplate.queryForObject(
+                "SELECT COUNT(*) FROM user_roles WHERE user_id = ? AND role_id = ?",
+                Long.class, curator.getId(), curatorRole.getId());
+        if (roleCount == null || roleCount == 0L) {
+            jdbcTemplate.update(
+                    "INSERT INTO user_roles (user_id, role_id, assigned_by, assigned_at) VALUES (?, ?, NULL, NOW())",
+                    curator.getId(), curatorRole.getId());
+        }
+    }
 
     @Test
-    void testCrawlRuleCreationAndVersioning() {
-        CrawlSourceProfile source = CrawlSourceProfile.builder()
-                .id(1L).name("Test Source").baseUrl("https://example.com").build();
+    @DisplayName("Unauthenticated caller cannot create crawl sources")
+    void unauthenticatedCannotCreateSource() throws Exception {
+        Map<String, Object> body = Map.of(
+                "name", "E2E Source",
+                "baseUrl", "https://example.org",
+                "description", "Boundary test source",
+                "rateLimitPerMinute", 30,
+                "requiresAuth", false);
 
-        // Setup mocks for first rule creation
-        when(crawlSourceProfileRepository.findById(1L)).thenReturn(Optional.of(source));
-        when(crawlRuleVersionRepository.findMaxVersionBySourceProfileId(1L))
-                .thenReturn(null)
-                .thenReturn(1);
-        when(crawlRuleVersionRepository.findBySourceProfileIdAndIsActiveTrue(1L))
-                .thenReturn(Optional.empty())
-                .thenReturn(Optional.empty());
-        when(crawlRuleVersionRepository.save(any(CrawlRuleVersion.class)))
-                .thenAnswer(inv -> {
-                    CrawlRuleVersion v = inv.getArgument(0);
-                    if (v.getId() == null) {
-                        v.setId((long)(Math.random() * 1000 + 100));
-                    }
-                    return v;
-                });
+        mockMvc.perform(post("/api/crawl-sources")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(body)))
+                .andExpect(status().isUnauthorized());
+    }
 
-        // Create first rule version
-        CrawlRuleRequest request1 = new CrawlRuleRequest();
-        request1.setExtractionMethod("CSS_SELECTOR");
-        request1.setRuleDefinition(Map.of("title", "h1.article-title"));
-        request1.setFieldMappings(Map.of("title", "articleTitle"));
-        request1.setNotes("Version 1");
+    @Test
+    @DisplayName("Curator can create source and rule through HTTP boundary")
+    void curatorCanCreateSourceAndRules() throws Exception {
+        String accessToken = loginAndExtractAccessToken("curator.integration", "Curator@12345");
 
-        CrawlRuleVersion v1 = crawlRuleService.createRule(1L, request1, 99L);
+        Map<String, Object> sourceBody = Map.of(
+                "name", "integration-source-" + System.currentTimeMillis(),
+                "baseUrl", "https://example.org",
+                "description", "Created from integration boundary test",
+                "rateLimitPerMinute", 45,
+                "requiresAuth", false);
 
-        assertNotNull(v1);
-        assertEquals(1, v1.getVersionNumber());
-        assertTrue(v1.getIsActive());
+        MvcResult createSourceResult = mockMvc.perform(post("/api/crawl-sources")
+                        .header("Authorization", "Bearer " + accessToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(sourceBody)))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.success").value(true))
+                .andReturn();
 
-        // Create second rule version (hot update)
-        CrawlRuleRequest request2 = new CrawlRuleRequest();
-        request2.setExtractionMethod("REGEX");
-        request2.setRuleDefinition(Map.of("title", "<h1>(.*?)</h1>"));
-        request2.setNotes("Version 2 - switched to regex");
+        JsonNode sourceJson = objectMapper.readTree(createSourceResult.getResponse().getContentAsString());
+        long sourceId = sourceJson.path("data").path("id").asLong();
 
-        CrawlRuleVersion v2 = crawlRuleService.createRule(1L, request2, 99L);
+        CrawlRuleRequest ruleRequest = CrawlRuleRequest.builder()
+                .extractionMethod("CSS_SELECTOR")
+                .ruleDefinition(Map.of("title", "h1.article-title"))
+                .fieldMappings(Map.of("title", "articleTitle"))
+                .notes("Initial rule for integration workflow")
+                .build();
 
-        assertNotNull(v2);
-        assertEquals(2, v2.getVersionNumber());
-        assertTrue(v2.getIsActive());
+        mockMvc.perform(post("/api/crawl-sources/" + sourceId + "/rules")
+                        .header("Authorization", "Bearer " + accessToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(ruleRequest)))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.success").value(true))
+                .andExpect(jsonPath("$.data.versionNumber").value(1));
 
-        // Verify audit logging was called for both creations
-        verify(auditLogService, times(2)).log(
-                eq(99L), any(), eq("CrawlRuleVersion"), any(), any(), any(), any());
+        mockMvc.perform(get("/api/crawl-sources/" + sourceId + "/rules")
+                        .header("Authorization", "Bearer " + accessToken))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.success").value(true))
+                .andExpect(jsonPath("$.data").isArray())
+                .andExpect(jsonPath("$.data[0].id").exists())
+                .andExpect(jsonPath("$.data[0].versionNumber").value(1));
+    }
+
+    @Test
+    @DisplayName("Student role cannot mutate crawl source boundaries")
+    void studentCannotCreateSource() throws Exception {
+        String accessToken = loginAndExtractAccessToken("student.integration", "Student@12345");
+        Map<String, Object> sourceBody = Map.of(
+                "name", "forbidden-source",
+                "baseUrl", "https://example.org",
+                "description", "Should be forbidden",
+                "rateLimitPerMinute", 20,
+                "requiresAuth", false);
+
+        mockMvc.perform(post("/api/crawl-sources")
+                        .header("Authorization", "Bearer " + accessToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(sourceBody)))
+                .andExpect(status().isForbidden())
+                .andExpect(jsonPath("$.success").value(false));
+    }
+
+    private String loginAndExtractAccessToken(String username, String password) throws Exception {
+        MvcResult result = mockMvc.perform(post("/api/auth/login")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(Map.of("username", username, "password", password))))
+                .andExpect(status().isOk())
+                .andReturn();
+        JsonNode root = objectMapper.readTree(result.getResponse().getContentAsString());
+        return root.path("data").path("accessToken").asText();
     }
 }

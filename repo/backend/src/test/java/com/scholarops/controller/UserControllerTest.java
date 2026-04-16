@@ -4,9 +4,11 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.scholarops.model.dto.AdminPasswordResetRequest;
 import com.scholarops.model.dto.UserCreateRequest;
 import com.scholarops.model.entity.User;
+import com.scholarops.controller.support.AbstractWebMvcControllerTest;
 import com.scholarops.security.JwtAuthenticationFilter;
 import com.scholarops.security.JwtTokenProvider;
 import com.scholarops.service.UserService;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
@@ -23,21 +25,28 @@ import java.util.List;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
+import static com.scholarops.controller.support.WebMvcTestUsers.userDetails;
 import static org.mockito.Mockito.when;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @WebMvcTest(value = UserController.class,
         excludeFilters = @ComponentScan.Filter(type = FilterType.ASSIGNABLE_TYPE,
                 classes = JwtAuthenticationFilter.class))
-class UserControllerTest {
+class UserControllerTest extends AbstractWebMvcControllerTest {
 
     @Autowired private MockMvc mockMvc;
     @Autowired private ObjectMapper objectMapper;
 
     @MockBean private UserService userService;
     @MockBean private JwtTokenProvider jwtTokenProvider;
+
+    @BeforeEach
+    void grantPerms() {
+        grantAllEvaluatorPermissions();
+    }
 
     @Test
     @WithMockUser(roles = "ADMINISTRATOR")
@@ -78,6 +87,7 @@ class UserControllerTest {
 
         mockMvc.perform(post("/api/users")
                         .with(csrf())
+                        .with(user(userDetails(99L, "admin", "ADMINISTRATOR", "USER_MANAGE")))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isCreated())
@@ -94,6 +104,7 @@ class UserControllerTest {
 
         mockMvc.perform(post("/api/users/1/admin-reset-password")
                         .with(csrf())
+                        .with(user(userDetails(99L, "admin", "ADMINISTRATOR", "PASSWORD_ADMIN_RESET")))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isOk())

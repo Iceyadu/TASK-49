@@ -147,6 +147,7 @@ com/scholarops/controller/AuthController.class
 com/scholarops/repository/CrawlRunRepository.class
 com/scholarops/model/dto/ContentPublishRequest$ContentPublishRequestBuilder.class
 com/scholarops/model/entity/CrawlRun$CrawlRunBuilder.class
+com/scholarops/security/AnonymousAwareAccessDeniedHandler.class
 com/scholarops/config/CorsConfig.class
 com/scholarops/repository/KnowledgeTagRepository.class
 com/scholarops/service/CrawlRuleService.class
@@ -193,6 +194,7 @@ com/scholarops/controller/QuizController.class
 com/scholarops/model/dto/ExtractionTestRequest$ExtractionTestRequestBuilder.class
 com/scholarops/model/entity/Schedule$ScheduleBuilder.class
 com/scholarops/controller/AuditLogController.class
+db/migration/V4__seed_demo_users.class
 com/scholarops/repository/CrawlRuleVersionRepository.class
 com/scholarops/security/PermissionEvaluatorImpl.class
 com/scholarops/model/entity/StandardizedContentRecord$StandardizedContentRecordBuilder.class

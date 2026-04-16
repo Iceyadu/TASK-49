@@ -3,9 +3,11 @@ package com.scholarops.controller;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.scholarops.model.dto.AutosaveRequest;
 import com.scholarops.model.entity.Submission;
+import com.scholarops.controller.support.AbstractWebMvcControllerTest;
 import com.scholarops.security.JwtAuthenticationFilter;
 import com.scholarops.security.JwtTokenProvider;
 import com.scholarops.service.SubmissionService;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
@@ -13,22 +15,23 @@ import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.FilterType;
 import org.springframework.http.MediaType;
-import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.util.List;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
+import static com.scholarops.controller.support.WebMvcTestUsers.userDetails;
 import static org.mockito.Mockito.when;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @WebMvcTest(value = SubmissionController.class,
         excludeFilters = @ComponentScan.Filter(type = FilterType.ASSIGNABLE_TYPE,
                 classes = JwtAuthenticationFilter.class))
-class SubmissionControllerTest {
+class SubmissionControllerTest extends AbstractWebMvcControllerTest {
 
     @Autowired private MockMvc mockMvc;
     @Autowired private ObjectMapper objectMapper;
@@ -36,8 +39,12 @@ class SubmissionControllerTest {
     @MockBean private SubmissionService submissionService;
     @MockBean private JwtTokenProvider jwtTokenProvider;
 
+    @BeforeEach
+    void grantPerms() {
+        grantAllEvaluatorPermissions();
+    }
+
     @Test
-    @WithMockUser(roles = "STUDENT")
     void testStartSubmission() throws Exception {
         Submission submission = Submission.builder()
                 .id(1L).attemptNumber(1).status("IN_PROGRESS")
@@ -46,13 +53,13 @@ class SubmissionControllerTest {
         when(submissionService.startSubmission(eq(1L), any())).thenReturn(submission);
 
         mockMvc.perform(post("/api/quizzes/1/submissions")
-                        .with(csrf()))
+                        .with(csrf())
+                        .with(user(userDetails(7L, "stu", "STUDENT", "QUIZ_TAKE"))))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.data.status").value("IN_PROGRESS"));
     }
 
     @Test
-    @WithMockUser(roles = "STUDENT")
     void testAutosave() throws Exception {
         AutosaveRequest request = new AutosaveRequest();
         request.setTimeRemainingSeconds(1800);
@@ -60,6 +67,7 @@ class SubmissionControllerTest {
 
         mockMvc.perform(put("/api/submissions/1/autosave")
                         .with(csrf())
+                        .with(user(userDetails(7L, "stu", "STUDENT", "QUIZ_TAKE")))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isOk())
@@ -67,7 +75,6 @@ class SubmissionControllerTest {
     }
 
     @Test
-    @WithMockUser(roles = "STUDENT")
     void testSubmit() throws Exception {
         Submission submission = Submission.builder()
                 .id(1L).status("SUBMITTED").build();
@@ -75,7 +82,8 @@ class SubmissionControllerTest {
         when(submissionService.submitSubmission(eq(1L), any())).thenReturn(submission);
 
         mockMvc.perform(put("/api/submissions/1/submit")
-                        .with(csrf()))
+                        .with(csrf())
+                        .with(user(userDetails(7L, "stu", "STUDENT", "QUIZ_TAKE"))))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.data.status").value("SUBMITTED"));
     }

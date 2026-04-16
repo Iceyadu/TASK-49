@@ -1,6 +1,7 @@
 package com.scholarops.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.scholarops.controller.support.AbstractWebMvcControllerTest;
 import com.scholarops.model.dto.AutosaveRequest;
 import com.scholarops.model.dto.GradingRequest;
 import com.scholarops.model.dto.RubricScoreRequest;
@@ -23,18 +24,18 @@ import org.springframework.context.annotation.FilterType;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.http.MediaType;
-import org.springframework.security.access.PermissionEvaluator;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.math.BigDecimal;
 import java.util.List;
+import java.util.UUID;
 
+import static com.scholarops.controller.support.WebMvcTestUsers.userDetails;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
@@ -46,7 +47,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
         value = {SubmissionController.class, GradingController.class},
         excludeFilters = @ComponentScan.Filter(type = FilterType.ASSIGNABLE_TYPE,
                 classes = JwtAuthenticationFilter.class))
-class SubmissionAuthorizationTest {
+class SubmissionAuthorizationTest extends AbstractWebMvcControllerTest {
 
     @Autowired private MockMvc mockMvc;
     @Autowired private ObjectMapper objectMapper;
@@ -54,31 +55,25 @@ class SubmissionAuthorizationTest {
     @MockBean private SubmissionService submissionService;
     @MockBean private GradingWorkflowService gradingWorkflowService;
     @MockBean private JwtTokenProvider jwtTokenProvider;
-    @MockBean private PermissionEvaluator permissionEvaluator;
 
     @BeforeEach
     void grantAllPermissions() {
-        when(permissionEvaluator.hasPermission(any(Authentication.class), any(), any()))
-                .thenReturn(true);
+        grantAllEvaluatorPermissions();
     }
 
-    // -----------------------------------------------------------------------
-    // Instructor cannot take quizzes (student-only submission endpoints)
-    // -----------------------------------------------------------------------
     @Nested
     @DisplayName("Instructor cannot perform student submission actions")
     class InstructorCannotTakeQuizzes {
 
         @Test
-        @WithMockUser(roles = "INSTRUCTOR")
         @DisplayName("Instructor cannot start a quiz submission")
         void instructorCannotStartSubmission() throws Exception {
-            mockMvc.perform(post("/api/quizzes/1/submissions").with(csrf()))
+            mockMvc.perform(post("/api/quizzes/1/submissions").with(csrf())
+                            .with(user(userDetails(20L, "instr", "INSTRUCTOR", "QUIZ_MANAGE"))))
                     .andExpect(status().isForbidden());
         }
 
         @Test
-        @WithMockUser(roles = "INSTRUCTOR")
         @DisplayName("Instructor cannot autosave a submission")
         void instructorCannotAutosave() throws Exception {
             AutosaveRequest request = new AutosaveRequest();
@@ -87,92 +82,87 @@ class SubmissionAuthorizationTest {
 
             mockMvc.perform(put("/api/submissions/1/autosave")
                             .with(csrf())
+                            .with(user(userDetails(20L, "instr", "INSTRUCTOR", "QUIZ_MANAGE")))
                             .contentType(MediaType.APPLICATION_JSON)
                             .content(objectMapper.writeValueAsString(request)))
                     .andExpect(status().isForbidden());
         }
 
         @Test
-        @WithMockUser(roles = "INSTRUCTOR")
         @DisplayName("Instructor cannot submit a quiz")
         void instructorCannotSubmit() throws Exception {
-            mockMvc.perform(put("/api/submissions/1/submit").with(csrf()))
+            mockMvc.perform(put("/api/submissions/1/submit").with(csrf())
+                            .with(user(userDetails(20L, "instr", "INSTRUCTOR", "QUIZ_MANAGE"))))
                     .andExpect(status().isForbidden());
         }
 
         @Test
-        @WithMockUser(roles = "INSTRUCTOR")
         @DisplayName("Instructor cannot view own feedback (student endpoint)")
         void instructorCannotViewFeedback() throws Exception {
-            mockMvc.perform(get("/api/submissions/1/feedback"))
+            mockMvc.perform(get("/api/submissions/1/feedback")
+                            .with(user(userDetails(20L, "instr", "INSTRUCTOR", "QUIZ_MANAGE"))))
                     .andExpect(status().isForbidden());
         }
     }
 
-    // -----------------------------------------------------------------------
-    // Teaching assistant cannot take quizzes
-    // -----------------------------------------------------------------------
     @Nested
     @DisplayName("Teaching assistant cannot perform student submission actions")
     class TACannotTakeQuizzes {
 
         @Test
-        @WithMockUser(roles = "TEACHING_ASSISTANT")
         @DisplayName("TA cannot start a quiz submission")
         void taCannotStartSubmission() throws Exception {
-            mockMvc.perform(post("/api/quizzes/1/submissions").with(csrf()))
+            mockMvc.perform(post("/api/quizzes/1/submissions").with(csrf())
+                            .with(user(userDetails(13L, "ta", "TEACHING_ASSISTANT", "GRADING_MANAGE"))))
                     .andExpect(status().isForbidden());
         }
 
         @Test
-        @WithMockUser(roles = "TEACHING_ASSISTANT")
         @DisplayName("TA cannot submit a quiz")
         void taCannotSubmit() throws Exception {
-            mockMvc.perform(put("/api/submissions/1/submit").with(csrf()))
+            mockMvc.perform(put("/api/submissions/1/submit").with(csrf())
+                            .with(user(userDetails(13L, "ta", "TEACHING_ASSISTANT", "GRADING_MANAGE"))))
                     .andExpect(status().isForbidden());
         }
     }
 
-    // -----------------------------------------------------------------------
-    // Student cannot access grading endpoints
-    // -----------------------------------------------------------------------
     @Nested
     @DisplayName("Student cannot access grading endpoints")
     class StudentCannotGrade {
 
         @Test
-        @WithMockUser(roles = "STUDENT")
         @DisplayName("Student cannot view grading queue")
         void studentCannotViewGradingQueue() throws Exception {
-            mockMvc.perform(get("/api/grading/queue"))
+            mockMvc.perform(get("/api/grading/queue")
+                            .with(user(userDetails(11L, "stu", "STUDENT", "QUIZ_TAKE"))))
                     .andExpect(status().isForbidden());
         }
 
         @Test
-        @WithMockUser(roles = "STUDENT")
         @DisplayName("Student cannot view grading state")
         void studentCannotViewGradingState() throws Exception {
-            mockMvc.perform(get("/api/grading/submissions/1"))
+            mockMvc.perform(get("/api/grading/submissions/1")
+                            .with(user(userDetails(11L, "stu", "STUDENT", "QUIZ_TAKE"))))
                     .andExpect(status().isForbidden());
         }
 
         @Test
-        @WithMockUser(roles = "STUDENT")
         @DisplayName("Student cannot grade submissions")
         void studentCannotGradeSubmission() throws Exception {
             GradingRequest request = new GradingRequest();
+            request.setSubmissionAnswerId(UUID.fromString("00000000-0000-0000-0000-000000000001"));
             request.setScore(8.0);
             request.setFeedback("Good");
 
             mockMvc.perform(post("/api/grading/submissions/1/grade")
                             .with(csrf())
+                            .with(user(userDetails(11L, "stu", "STUDENT", "QUIZ_TAKE")))
                             .contentType(MediaType.APPLICATION_JSON)
                             .content(objectMapper.writeValueAsString(request)))
                     .andExpect(status().isForbidden());
         }
 
         @Test
-        @WithMockUser(roles = "STUDENT")
         @DisplayName("Student cannot add rubric scores")
         void studentCannotAddRubricScores() throws Exception {
             RubricScoreRequest score = new RubricScoreRequest();
@@ -182,21 +172,18 @@ class SubmissionAuthorizationTest {
 
             mockMvc.perform(post("/api/grading/submissions/1/rubric-scores")
                             .with(csrf())
+                            .with(user(userDetails(11L, "stu", "STUDENT", "QUIZ_TAKE")))
                             .contentType(MediaType.APPLICATION_JSON)
                             .content(objectMapper.writeValueAsString(List.of(score))))
                     .andExpect(status().isForbidden());
         }
     }
 
-    // -----------------------------------------------------------------------
-    // Valid role + permission: student can start and submit
-    // -----------------------------------------------------------------------
     @Nested
     @DisplayName("Student can perform authorized submission actions")
     class StudentCanSubmit {
 
         @Test
-        @WithMockUser(roles = "STUDENT")
         @DisplayName("Student can start a submission")
         void studentCanStartSubmission() throws Exception {
             Submission submission = Submission.builder()
@@ -205,13 +192,13 @@ class SubmissionAuthorizationTest {
 
             when(submissionService.startSubmission(eq(1L), any())).thenReturn(submission);
 
-            mockMvc.perform(post("/api/quizzes/1/submissions").with(csrf()))
+            mockMvc.perform(post("/api/quizzes/1/submissions").with(csrf())
+                            .with(user(userDetails(11L, "stu", "STUDENT", "QUIZ_TAKE"))))
                     .andExpect(status().isCreated())
                     .andExpect(jsonPath("$.data.status").value("IN_PROGRESS"));
         }
 
         @Test
-        @WithMockUser(roles = "STUDENT")
         @DisplayName("Student can submit a quiz")
         void studentCanSubmitQuiz() throws Exception {
             Submission submission = Submission.builder()
@@ -219,24 +206,22 @@ class SubmissionAuthorizationTest {
 
             when(submissionService.submitSubmission(eq(1L), any())).thenReturn(submission);
 
-            mockMvc.perform(put("/api/submissions/1/submit").with(csrf()))
+            mockMvc.perform(put("/api/submissions/1/submit").with(csrf())
+                            .with(user(userDetails(11L, "stu", "STUDENT", "QUIZ_TAKE"))))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.data.status").value("SUBMITTED"));
         }
     }
 
-    // -----------------------------------------------------------------------
-    // Valid role + permission: instructor and TA can grade
-    // -----------------------------------------------------------------------
     @Nested
     @DisplayName("Authorized users can access grading")
     class AuthorizedGrading {
 
         @Test
-        @WithMockUser(roles = "INSTRUCTOR")
         @DisplayName("Instructor can grade a submission")
         void instructorCanGrade() throws Exception {
             GradingRequest request = new GradingRequest();
+            request.setSubmissionAnswerId(UUID.fromString("00000000-0000-0000-0000-000000000001"));
             request.setScore(9.0);
             request.setFeedback("Excellent");
 
@@ -248,6 +233,7 @@ class SubmissionAuthorizationTest {
 
             mockMvc.perform(post("/api/grading/submissions/1/grade")
                             .with(csrf())
+                            .with(user(userDetails(20L, "instr", "INSTRUCTOR", "GRADING_MANAGE")))
                             .contentType(MediaType.APPLICATION_JSON)
                             .content(objectMapper.writeValueAsString(request)))
                     .andExpect(status().isOk())
@@ -255,7 +241,6 @@ class SubmissionAuthorizationTest {
         }
 
         @Test
-        @WithMockUser(roles = "TEACHING_ASSISTANT")
         @DisplayName("TA can view grading queue")
         void taCanViewQueue() throws Exception {
             SubmissionAnswer answer = SubmissionAnswer.builder().id(1L).build();
@@ -265,13 +250,13 @@ class SubmissionAuthorizationTest {
 
             when(gradingWorkflowService.getGradingQueue(any(), any())).thenReturn(page);
 
-            mockMvc.perform(get("/api/grading/queue").param("status", "PENDING"))
+            mockMvc.perform(get("/api/grading/queue").param("status", "PENDING")
+                            .with(user(userDetails(13L, "ta", "TEACHING_ASSISTANT", "GRADING_VIEW"))))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.success").value(true));
         }
 
         @Test
-        @WithMockUser(roles = "TEACHING_ASSISTANT")
         @DisplayName("TA can add rubric scores")
         void taCanAddRubricScores() throws Exception {
             RubricScoreRequest score = new RubricScoreRequest();
@@ -286,6 +271,7 @@ class SubmissionAuthorizationTest {
 
             mockMvc.perform(post("/api/grading/submissions/1/rubric-scores")
                             .with(csrf())
+                            .with(user(userDetails(13L, "ta", "TEACHING_ASSISTANT", "GRADING_MANAGE")))
                             .contentType(MediaType.APPLICATION_JSON)
                             .content(objectMapper.writeValueAsString(List.of(score))))
                     .andExpect(status().isOk())
@@ -293,39 +279,37 @@ class SubmissionAuthorizationTest {
         }
     }
 
-    // -----------------------------------------------------------------------
-    // Admin cannot access submission or grading endpoints
-    // -----------------------------------------------------------------------
     @Nested
     @DisplayName("Admin cannot access submission or grading endpoints")
     class AdminCannotAccessSubmissionsOrGrading {
 
         @Test
-        @WithMockUser(roles = "ADMINISTRATOR")
         @DisplayName("Admin cannot start submissions")
         void adminCannotStartSubmission() throws Exception {
-            mockMvc.perform(post("/api/quizzes/1/submissions").with(csrf()))
+            mockMvc.perform(post("/api/quizzes/1/submissions").with(csrf())
+                            .with(user(userDetails(30L, "adm", "ADMINISTRATOR", "USER_MANAGE"))))
                     .andExpect(status().isForbidden());
         }
 
         @Test
-        @WithMockUser(roles = "ADMINISTRATOR")
         @DisplayName("Admin cannot access grading queue")
         void adminCannotAccessGradingQueue() throws Exception {
-            mockMvc.perform(get("/api/grading/queue"))
+            mockMvc.perform(get("/api/grading/queue")
+                            .with(user(userDetails(30L, "adm", "ADMINISTRATOR", "USER_MANAGE"))))
                     .andExpect(status().isForbidden());
         }
 
         @Test
-        @WithMockUser(roles = "ADMINISTRATOR")
         @DisplayName("Admin cannot grade submissions")
         void adminCannotGrade() throws Exception {
             GradingRequest request = new GradingRequest();
+            request.setSubmissionAnswerId(UUID.fromString("00000000-0000-0000-0000-000000000001"));
             request.setScore(8.0);
             request.setFeedback("Good");
 
             mockMvc.perform(post("/api/grading/submissions/1/grade")
                             .with(csrf())
+                            .with(user(userDetails(30L, "adm", "ADMINISTRATOR", "USER_MANAGE")))
                             .contentType(MediaType.APPLICATION_JSON)
                             .content(objectMapper.writeValueAsString(request)))
                     .andExpect(status().isForbidden());

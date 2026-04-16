@@ -1,4 +1,4 @@
 -------------------------------------------------------------------------------
 Test set: com.scholarops.controller.AuthorizationDenialTest$UnauthenticatedAccess
 -------------------------------------------------------------------------------
-Tests run: 15, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.057 s -- in com.scholarops.controller.AuthorizationDenialTest$UnauthenticatedAccess
+Tests run: 15, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.341 s -- in com.scholarops.controller.AuthorizationDenialTest$UnauthenticatedAccess

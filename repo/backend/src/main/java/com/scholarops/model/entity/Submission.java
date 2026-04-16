@@ -1,5 +1,6 @@
 package com.scholarops.model.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.*;
 import java.math.BigDecimal;
@@ -17,10 +18,12 @@ public class Submission {
     private Long id;
 
     @ManyToOne(fetch = FetchType.LAZY)
+    @JsonIgnore
     @JoinColumn(name = "quiz_paper_id", nullable = false)
     private QuizPaper quizPaper;
 
     @ManyToOne(fetch = FetchType.LAZY)
+    @JsonIgnore
     @JoinColumn(name = "student_id", nullable = false)
     private User student;
 
@@ -57,6 +60,7 @@ public class Submission {
     private String fingerprintHash;
 
     @OneToMany(mappedBy = "submission", cascade = CascadeType.ALL, orphanRemoval = true)
+    @JsonIgnore
     @Builder.Default
     private List<SubmissionAnswer> answers = new ArrayList<>();
 

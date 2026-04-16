@@ -1,6 +1,7 @@
 package com.scholarops.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.scholarops.controller.support.AbstractWebMvcControllerTest;
 import com.scholarops.model.dto.GradingRequest;
 import com.scholarops.model.dto.RubricScoreRequest;
 import com.scholarops.model.entity.GradingState;
@@ -8,6 +9,7 @@ import com.scholarops.model.entity.SubmissionAnswer;
 import com.scholarops.security.JwtAuthenticationFilter;
 import com.scholarops.security.JwtTokenProvider;
 import com.scholarops.service.GradingWorkflowService;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
@@ -22,24 +24,32 @@ import org.springframework.test.web.servlet.MockMvc;
 
 import java.math.BigDecimal;
 import java.util.List;
+import java.util.UUID;
 
+import static com.scholarops.controller.support.WebMvcTestUsers.userDetails;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @WebMvcTest(value = GradingController.class,
         excludeFilters = @ComponentScan.Filter(type = FilterType.ASSIGNABLE_TYPE,
                 classes = JwtAuthenticationFilter.class))
-class GradingControllerTest {
+class GradingControllerTest extends AbstractWebMvcControllerTest {
 
     @Autowired private MockMvc mockMvc;
     @Autowired private ObjectMapper objectMapper;
 
     @MockBean private GradingWorkflowService gradingWorkflowService;
     @MockBean private JwtTokenProvider jwtTokenProvider;
+
+    @BeforeEach
+    void grantPerms() {
+        grantAllEvaluatorPermissions();
+    }
 
     @Test
     @WithMockUser(roles = "TEACHING_ASSISTANT")
@@ -58,9 +68,9 @@ class GradingControllerTest {
     }
 
     @Test
-    @WithMockUser(roles = "INSTRUCTOR")
     void testGradeItem() throws Exception {
         GradingRequest request = new GradingRequest();
+        request.setSubmissionAnswerId(UUID.fromString("00000000-0000-0000-0000-000000000001"));
         request.setScore(8.0);
         request.setFeedback("Good work");
 
@@ -72,6 +82,7 @@ class GradingControllerTest {
 
         mockMvc.perform(post("/api/grading/submissions/1/grade")
                         .with(csrf())
+                        .with(user(userDetails(12L, "instr", "INSTRUCTOR", "GRADING_MANAGE")))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isOk())
@@ -79,7 +90,6 @@ class GradingControllerTest {
     }
 
     @Test
-    @WithMockUser(roles = "TEACHING_ASSISTANT")
     void testAddRubricScores() throws Exception {
         RubricScoreRequest score = new RubricScoreRequest();
         score.setCriterionName("Clarity");
@@ -93,6 +103,7 @@ class GradingControllerTest {
 
         mockMvc.perform(post("/api/grading/submissions/1/rubric-scores")
                         .with(csrf())
+                        .with(user(userDetails(13L, "ta", "TEACHING_ASSISTANT", "GRADING_MANAGE")))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(List.of(score))))
                 .andExpect(status().isOk())

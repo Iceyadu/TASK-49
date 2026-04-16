@@ -7,6 +7,7 @@ import com.scholarops.model.entity.GradingState;
 import com.scholarops.model.entity.Submission;
 import com.scholarops.model.entity.SubmissionAnswer;
 import com.scholarops.repository.WrongAnswerHistoryRepository;
+import com.scholarops.controller.support.AbstractWebMvcControllerTest;
 import com.scholarops.security.JwtAuthenticationFilter;
 import com.scholarops.security.JwtTokenProvider;
 import com.scholarops.service.*;
@@ -21,17 +22,19 @@ import org.springframework.context.annotation.FilterType;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.http.MediaType;
-import org.springframework.security.access.PermissionEvaluator;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.math.BigDecimal;
 import java.util.List;
+import java.util.UUID;
 
+import static com.scholarops.controller.support.WebMvcTestUsers.userDetails;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.when;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
@@ -59,7 +62,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
         },
         excludeFilters = @ComponentScan.Filter(type = FilterType.ASSIGNABLE_TYPE,
                 classes = JwtAuthenticationFilter.class))
-class PermissionGranularityTest {
+class PermissionGranularityTest extends AbstractWebMvcControllerTest {
 
     @Autowired private MockMvc mockMvc;
     @Autowired private ObjectMapper objectMapper;
@@ -80,7 +83,6 @@ class PermissionGranularityTest {
     @MockBean private WrongAnswerHistoryRepository wrongAnswerHistoryRepository;
 
     @MockBean private JwtTokenProvider jwtTokenProvider;
-    @MockBean private PermissionEvaluator permissionEvaluator;
 
     // -----------------------------------------------------------------------
     // INSTRUCTOR role without QUIZ_MANAGE permission
@@ -181,8 +183,9 @@ class PermissionGranularityTest {
 
             mockMvc.perform(post("/api/question-banks/1/questions")
                             .with(csrf())
+                            .with(user(userDetails(101L, "instr", "INSTRUCTOR")))
                             .contentType(MediaType.APPLICATION_JSON)
-                            .content("{\"questionText\":\"What is 2+2?\",\"questionType\":\"MULTIPLE_CHOICE\",\"difficultyLevel\":\"EASY\",\"points\":1}"))
+                            .content("{\"questionBankId\":1,\"questionText\":\"What is 2+2?\",\"questionType\":\"MULTIPLE_CHOICE\",\"difficultyLevel\":1,\"points\":1}"))
                     .andExpect(status().isForbidden());
         }
 
@@ -301,8 +304,9 @@ class PermissionGranularityTest {
 
             mockMvc.perform(post("/api/schedules/1/move")
                             .with(csrf())
+                            .with(user(userDetails(102L, "stu", "STUDENT")))
                             .contentType(MediaType.APPLICATION_JSON)
-                            .content("{\"newStartTime\":\"2024-06-01T09:00\",\"newEndTime\":\"2024-06-01T10:00\"}"))
+                            .content("{\"scheduleId\":\"00000000-0000-0000-0000-000000000001\",\"newStartTime\":\"2024-06-01T09:00\",\"newEndTime\":\"2024-06-01T10:00\"}"))
                     .andExpect(status().isForbidden());
         }
 
@@ -363,11 +367,13 @@ class PermissionGranularityTest {
                     .thenReturn(false);
 
             GradingRequest request = new GradingRequest();
+            request.setSubmissionAnswerId(UUID.fromString("00000000-0000-0000-0000-000000000001"));
             request.setScore(8.0);
             request.setFeedback("Good");
 
             mockMvc.perform(post("/api/grading/submissions/1/grade")
                             .with(csrf())
+                            .with(user(userDetails(103L, "ta", "TEACHING_ASSISTANT")))
                             .contentType(MediaType.APPLICATION_JSON)
                             .content(objectMapper.writeValueAsString(request)))
                     .andExpect(status().isForbidden());
@@ -381,11 +387,13 @@ class PermissionGranularityTest {
                     .thenReturn(false);
 
             GradingRequest request = new GradingRequest();
+            request.setSubmissionAnswerId(UUID.fromString("00000000-0000-0000-0000-000000000001"));
             request.setScore(8.0);
             request.setFeedback("Good");
 
             mockMvc.perform(post("/api/grading/submissions/1/grade")
                             .with(csrf())
+                            .with(user(userDetails(101L, "instr", "INSTRUCTOR")))
                             .contentType(MediaType.APPLICATION_JSON)
                             .content(objectMapper.writeValueAsString(request)))
                     .andExpect(status().isForbidden());
@@ -436,7 +444,8 @@ class PermissionGranularityTest {
             when(permissionEvaluator.hasPermission(any(Authentication.class), any(), eq("GRADING_VIEW")))
                     .thenReturn(false);
 
-            mockMvc.perform(get("/api/grading/submissions/1"))
+            mockMvc.perform(get("/api/grading/submissions/1")
+                            .with(user(userDetails(101L, "instr", "INSTRUCTOR"))))
                     .andExpect(status().isForbidden());
         }
     }
@@ -498,8 +507,9 @@ class PermissionGranularityTest {
 
             mockMvc.perform(post("/api/users")
                             .with(csrf())
+                            .with(user(userDetails(104L, "adm", "ADMINISTRATOR")))
                             .contentType(MediaType.APPLICATION_JSON)
-                            .content("{\"username\":\"new\",\"email\":\"a@b.com\",\"password\":\"pass\"}"))
+                            .content("{\"username\":\"newuser\",\"email\":\"new@b.com\",\"password\":\"StrongPass1!\",\"fullName\":\"New User\"}"))
                     .andExpect(status().isForbidden());
         }
 
@@ -510,7 +520,8 @@ class PermissionGranularityTest {
             when(permissionEvaluator.hasPermission(any(Authentication.class), any(), eq("USER_MANAGE")))
                     .thenReturn(false);
 
-            mockMvc.perform(delete("/api/users/1").with(csrf()))
+            mockMvc.perform(delete("/api/users/1").with(csrf())
+                            .with(user(userDetails(104L, "adm", "ADMINISTRATOR"))))
                     .andExpect(status().isForbidden());
         }
     }
@@ -606,7 +617,8 @@ class PermissionGranularityTest {
             when(permissionEvaluator.hasPermission(any(Authentication.class), any(), eq("CONTENT_REVIEW")))
                     .thenReturn(false);
 
-            mockMvc.perform(post("/api/content/1/publish").with(csrf()))
+            mockMvc.perform(post("/api/content/1/publish").with(csrf())
+                            .with(user(userDetails(105L, "cur", "CONTENT_CURATOR"))))
                     .andExpect(status().isForbidden());
         }
     }
@@ -625,7 +637,8 @@ class PermissionGranularityTest {
             when(permissionEvaluator.hasPermission(any(Authentication.class), any(), eq("CRAWL_SOURCE_MANAGE")))
                     .thenReturn(false);
 
-            mockMvc.perform(get("/api/crawl-sources"))
+            mockMvc.perform(get("/api/crawl-sources")
+                            .with(user(userDetails(105L, "cur", "CONTENT_CURATOR"))))
                     .andExpect(status().isForbidden());
         }
 
@@ -638,8 +651,9 @@ class PermissionGranularityTest {
 
             mockMvc.perform(post("/api/crawl-sources")
                             .with(csrf())
+                            .with(user(userDetails(105L, "cur", "CONTENT_CURATOR")))
                             .contentType(MediaType.APPLICATION_JSON)
-                            .content("{\"url\":\"https://example.com\",\"name\":\"Test\"}"))
+                            .content("{\"name\":\"Test\",\"baseUrl\":\"https://example.com\"}"))
                     .andExpect(status().isForbidden());
         }
 
@@ -650,7 +664,8 @@ class PermissionGranularityTest {
             when(permissionEvaluator.hasPermission(any(Authentication.class), any(), eq("CRAWL_SOURCE_MANAGE")))
                     .thenReturn(false);
 
-            mockMvc.perform(delete("/api/crawl-sources/1").with(csrf()))
+            mockMvc.perform(delete("/api/crawl-sources/1").with(csrf())
+                            .with(user(userDetails(105L, "cur", "CONTENT_CURATOR"))))
                     .andExpect(status().isForbidden());
         }
     }
@@ -711,7 +726,8 @@ class PermissionGranularityTest {
                     .thenReturn(true);
             when(quizAssemblyService.listQuizzes(any())).thenReturn(List.of());
 
-            mockMvc.perform(get("/api/quizzes"))
+            mockMvc.perform(get("/api/quizzes")
+                            .with(user(userDetails(101L, "instr", "INSTRUCTOR"))))
                     .andExpect(status().isOk());
         }
 
@@ -740,7 +756,8 @@ class PermissionGranularityTest {
                     .timeRemainingSeconds(3600).build();
             when(submissionService.startSubmission(eq(1L), any())).thenReturn(submission);
 
-            mockMvc.perform(post("/api/quizzes/1/submissions").with(csrf()))
+            mockMvc.perform(post("/api/quizzes/1/submissions").with(csrf())
+                            .with(user(userDetails(102L, "stu", "STUDENT"))))
                     .andExpect(status().isCreated());
         }
 

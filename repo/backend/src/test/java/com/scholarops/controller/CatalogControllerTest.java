@@ -1,9 +1,11 @@
 package com.scholarops.controller;
 
+import com.scholarops.controller.support.AbstractWebMvcControllerTest;
 import com.scholarops.model.entity.StandardizedContentRecord;
 import com.scholarops.security.JwtAuthenticationFilter;
 import com.scholarops.security.JwtTokenProvider;
 import com.scholarops.service.CatalogService;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
@@ -25,12 +27,17 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @WebMvcTest(value = CatalogController.class,
         excludeFilters = @ComponentScan.Filter(type = FilterType.ASSIGNABLE_TYPE,
                 classes = JwtAuthenticationFilter.class))
-class CatalogControllerTest {
+class CatalogControllerTest extends AbstractWebMvcControllerTest {
 
     @Autowired private MockMvc mockMvc;
 
     @MockBean private CatalogService catalogService;
     @MockBean private JwtTokenProvider jwtTokenProvider;
+
+    @BeforeEach
+    void grantPerms() {
+        grantAllEvaluatorPermissions();
+    }
 
     @Test
     @WithMockUser(roles = "STUDENT")

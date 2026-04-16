@@ -2,10 +2,10 @@ package com.scholarops.config;
 
 import com.scholarops.security.AnonymousAwareAccessDeniedHandler;
 import com.scholarops.security.JwtAuthenticationFilter;
-import com.scholarops.security.PermissionEvaluatorImpl;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.access.PermissionEvaluator;
 import org.springframework.security.access.expression.method.DefaultMethodSecurityExpressionHandler;
 import org.springframework.security.access.expression.method.MethodSecurityExpressionHandler;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -27,11 +27,11 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 public class SecurityConfig {
 
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
-    private final PermissionEvaluatorImpl permissionEvaluator;
+    private final PermissionEvaluator permissionEvaluator;
     private final AnonymousAwareAccessDeniedHandler accessDeniedHandler;
 
     public SecurityConfig(JwtAuthenticationFilter jwtAuthenticationFilter,
-                          PermissionEvaluatorImpl permissionEvaluator,
+                          PermissionEvaluator permissionEvaluator,
                           AnonymousAwareAccessDeniedHandler accessDeniedHandler) {
         this.jwtAuthenticationFilter = jwtAuthenticationFilter;
         this.permissionEvaluator = permissionEvaluator;

@@ -1,67 +1,103 @@
-# ScholarOps Offline Learning & Content Intake
+# Project Type: fullstack
 
-## Project Structure
-- `backend/`: Spring Boot API, security, crawler, grading, schedule, plagiarism, Flyway schema.
-- `frontend/`: Vue 3 + Vite web app with role-specific workspaces.
-- `docker-compose.yml`: local stack for MySQL + backend + frontend containers.
+# ScholarOps Offline Learning and Content Intake
 
-## Local Run (without Docker)
-### Backend
-1. Start MySQL 8 and create database `scholarops`.
-2. Configure env vars (or rely on defaults in `application.yml`):
-   - `DB_HOST`, `DB_PORT`, `DB_NAME`, `DB_USERNAME`, `DB_PASSWORD`
-   - `JWT_SECRET`
-   - `SCHOLAROPS_AES_KEY` (32-byte key)
-3. Run:
-   - `cd backend`
-   - `./mvnw spring-boot:run` (or `mvn spring-boot:run`)
+ScholarOps is a role-based fullstack system with:
+- Spring Boot backend (`backend/`)
+- Vue 3 frontend (`frontend/`)
+- MySQL + app stack via Docker Compose (`docker-compose.yml`)
 
-### Frontend
-1. Configure API base URL if needed in frontend env config.
-2. Run:
-   - `cd frontend`
-   - `npm install`
-   - `npm run dev`
+## Quick Start (Docker, full stack)
 
-## Docker Run
 From `repo/`:
 
 ```bash
-docker compose up --build
+docker compose up -d
+# or: docker-compose up -d
 ```
 
-- **API:** http://localhost:8080  
-- **UI:** http://localhost:8088 (default; avoids host port 80 conflicts)
+This starts:
+- `mysql` on `3306`
+- `backend` on `8080`
+- `frontend` on `5173`
 
-Optional: `FRONTEND_PORT=3000 docker compose up --build` to map the UI to another host port.
+## Access URLs
 
-Images are built from `docker/Dockerfile.backend` (Maven) and `docker/Dockerfile.frontend` (npm + nginx), so you do **not** need a prebuilt JAR or `frontend/dist` on the host.
+- Frontend: `http://localhost:5173/login`
+- Backend base URL: `http://localhost:8080`
+- Backend login endpoint: `http://localhost:8080/api/auth/login`
 
-## Tests
-### Full suite (Docker-only)
-From `repo/`, run:
+## Demo Credentials (seeded by Flyway)
+
+All accounts are created automatically by DB migrations.
+
+- `ADMINISTRATOR`
+  - username: `admin`
+  - password: `Admin@12345678`
+- `CONTENT_CURATOR`
+  - username: `curator.integration`
+  - password: `Curator@12345`
+- `INSTRUCTOR`
+  - username: `instructor.quiz.api`
+  - password: `Instructor@12345`
+- `TEACHING_ASSISTANT`
+  - username: `ta.integration`
+  - password: `Ta@12345`
+- `STUDENT`
+  - username: `student.integration`
+  - password: `Student@12345`
+
+## Verify the System
+
+### 1) Health/auth verification with curl
 
 ```bash
-./run_tests.sh
+curl -i -X POST http://localhost:8080/api/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{"username":"admin","password":"Admin@12345678"}'
 ```
 
-`run_tests.sh` is now only an entrypoint that launches the Docker test runner service from `docker-compose.yml`.
-Inside that container, tests run with language-native tools:
-- backend: Maven (`mvn test`)
-- frontend: Vitest (`npm run test -- --config tests/vitest.config.ts`)
+Expected: HTTP `200` with `accessToken` and `refreshToken` in JSON.
 
-Optional wrapper (same behavior): `./docker/run-tests-in-docker.sh`.
+### 2) UI verification flow
 
-### Backend only (manual, host)
-- `cd backend`
-- `./mvnw test` (or `mvn test`)
+1. Open `http://localhost:5173/login`
+2. Sign in as `admin` / `Admin@12345678`
+3. Confirm you land on dashboard (`/`) and can open admin pages such as `/admin/users`
 
-### Frontend only (manual, host)
-- `cd frontend`
-- `npm test`
+## Tests
 
-## Security Notes
-- Passwords are validated by policy and hashed with BCrypt.
-- Crawl source credentials are encrypted using AES at rest.
-- JWT auth protects `/api/**` except login/refresh endpoints.
+Test folders:
+- `unit_tests/` - frontend Vitest specs
+- `e2e/` - Playwright browser + real-network API specs
+- `api_tests/` - reserved API test assets (backend API suites run via Maven)
 
+Main runner from `repo/`:
+
+```bash
+./run_tests.sh all
+```
+
+Selective suites:
+- `./run_tests.sh backend`
+- `./run_tests.sh frontend`
+- `./run_tests.sh api`
+- `./run_tests.sh e2e`
+
+## Project Structure
+
+- `backend/` - Spring Boot API, security, crawler, grading, schedule, plagiarism, Flyway
+- `frontend/` - Vue app
+- `unit_tests/` - frontend unit specs
+- `e2e/` - Playwright specs + API helpers
+- `api_tests/` - API test folder placeholder
+- `docker-compose.yml` - local fullstack stack
+
+## Stop Services
+
+From `repo/`:
+
+```bash
+docker compose down
+# or: docker-compose down
+```

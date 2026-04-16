@@ -3,6 +3,7 @@ package com.scholarops.controller;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.scholarops.model.dto.LoginRequest;
 import com.scholarops.model.dto.LoginResponse;
+import com.scholarops.controller.support.AbstractWebMvcControllerTest;
 import com.scholarops.security.JwtAuthenticationFilter;
 import com.scholarops.security.JwtTokenProvider;
 import com.scholarops.service.AuthService;
@@ -28,7 +29,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @WebMvcTest(value = AuthController.class,
         excludeFilters = @ComponentScan.Filter(type = FilterType.ASSIGNABLE_TYPE,
                 classes = JwtAuthenticationFilter.class))
-class AuthControllerTest {
+class AuthControllerTest extends AbstractWebMvcControllerTest {
 
     @Autowired private MockMvc mockMvc;
     @Autowired private ObjectMapper objectMapper;

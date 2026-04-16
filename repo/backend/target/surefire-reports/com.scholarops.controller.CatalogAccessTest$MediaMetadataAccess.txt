@@ -1,28 +1,4 @@
 -------------------------------------------------------------------------------
 Test set: com.scholarops.controller.CatalogAccessTest$MediaMetadataAccess
 -------------------------------------------------------------------------------
-Tests run: 4, Failures: 2, Errors: 0, Skipped: 0, Time elapsed: 0.014 s <<< FAILURE! -- in com.scholarops.controller.CatalogAccessTest$MediaMetadataAccess
-com.scholarops.controller.CatalogAccessTest$MediaMetadataAccess.curatorWithoutPermissionsCannotAccessMetadata -- Time elapsed: 0.003 s <<< FAILURE!
-java.lang.AssertionError: Status expected:<403> but was:<200>
-	at org.springframework.test.util.AssertionErrors.fail(AssertionErrors.java:59)
-	at org.springframework.test.util.AssertionErrors.assertEquals(AssertionErrors.java:122)
-	at org.springframework.test.web.servlet.result.StatusResultMatchers.lambda$matcher$9(StatusResultMatchers.java:637)
-	at org.springframework.test.web.servlet.MockMvc$1.andExpect(MockMvc.java:214)
-	at com.scholarops.controller.CatalogAccessTest$MediaMetadataAccess.curatorWithoutPermissionsCannotAccessMetadata(CatalogAccessTest.java:374)
-	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
-	at java.base/java.util.ArrayList.forEach(ArrayList.java:1597)
-	at java.base/java.util.ArrayList.forEach(ArrayList.java:1597)
-	at java.base/java.util.ArrayList.forEach(ArrayList.java:1597)
-
-com.scholarops.controller.CatalogAccessTest$MediaMetadataAccess.studentWithoutContentViewCannotAccessMetadata -- Time elapsed: 0.002 s <<< FAILURE!
-java.lang.AssertionError: Status expected:<403> but was:<200>
-	at org.springframework.test.util.AssertionErrors.fail(AssertionErrors.java:59)
-	at org.springframework.test.util.AssertionErrors.assertEquals(AssertionErrors.java:122)
-	at org.springframework.test.web.servlet.result.StatusResultMatchers.lambda$matcher$9(StatusResultMatchers.java:637)
-	at org.springframework.test.web.servlet.MockMvc$1.andExpect(MockMvc.java:214)
-	at com.scholarops.controller.CatalogAccessTest$MediaMetadataAccess.studentWithoutContentViewCannotAccessMetadata(CatalogAccessTest.java:361)
-	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
-	at java.base/java.util.ArrayList.forEach(ArrayList.java:1597)
-	at java.base/java.util.ArrayList.forEach(ArrayList.java:1597)
-	at java.base/java.util.ArrayList.forEach(ArrayList.java:1597)
-
+Tests run: 4, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.163 s -- in com.scholarops.controller.CatalogAccessTest$MediaMetadataAccess

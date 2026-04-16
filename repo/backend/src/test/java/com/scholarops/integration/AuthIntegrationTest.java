@@ -1,26 +1,23 @@
 package com.scholarops.integration;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.scholarops.model.dto.LoginRequest;
-import com.scholarops.model.entity.User;
-import com.scholarops.security.UserDetailsImpl;
-import com.scholarops.security.UserDetailsServiceImpl;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.MvcResult;
 
-import java.util.Set;
+import java.util.Map;
 
-import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.Mockito.when;
-import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @SpringBootTest
 @AutoConfigureMockMvc
@@ -28,37 +25,72 @@ class AuthIntegrationTest {
 
     @Autowired private MockMvc mockMvc;
     @Autowired private ObjectMapper objectMapper;
+    @Autowired private JdbcTemplate jdbcTemplate;
+    @Autowired private PasswordEncoder passwordEncoder;
 
-    @MockBean
-    private UserDetailsServiceImpl userDetailsService;
+    private static final String ADMIN_PASSWORD = "Admin@12345678";
 
-    @MockBean
-    private PasswordEncoder passwordEncoder;
+    @BeforeEach
+    void ensureSeedUsersAreReady() {
+        Long adminCount = jdbcTemplate.queryForObject(
+                "SELECT COUNT(*) FROM users WHERE username = 'admin'",
+                Long.class);
+        if (adminCount == null || adminCount == 0L) {
+            throw new IllegalStateException("Expected seeded admin user for auth boundary tests");
+        }
+        jdbcTemplate.update("UPDATE users SET password_hash = ? WHERE username = 'admin'",
+                passwordEncoder.encode(ADMIN_PASSWORD));
+    }
 
     @Test
-    void testFullLoginFlow() throws Exception {
-        User user = User.builder()
-                .id(1L).username("admin").email("admin@test.com")
-                .passwordHash("encoded-password")
-                .enabled(true).accountLocked(false).build();
-
-        UserDetailsImpl userDetails = new UserDetailsImpl(user,
-                Set.of("ADMINISTRATOR"), Set.of("USER_MANAGE", "ROLE_ASSIGN", "AUDIT_VIEW"));
-
-        when(userDetailsService.loadUserByUsername("admin")).thenReturn(userDetails);
-        when(passwordEncoder.matches(anyString(), anyString())).thenReturn(true);
-
-        LoginRequest loginRequest = new LoginRequest("admin", "StrongPass1!");
-
+    void validCredentialsReturnBearerTokensAndRoleClaims() throws Exception {
         mockMvc.perform(post("/api/auth/login")
-                        .with(csrf())
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(loginRequest)))
+                        .content(objectMapper.writeValueAsString(
+                                Map.of("username", "admin", "password", ADMIN_PASSWORD))))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.success").value(true))
-                .andExpect(jsonPath("$.data.accessToken").exists())
-                .andExpect(jsonPath("$.data.refreshToken").exists())
+                .andExpect(jsonPath("$.data.accessToken").isString())
+                .andExpect(jsonPath("$.data.refreshToken").isString())
                 .andExpect(jsonPath("$.data.tokenType").value("Bearer"))
-                .andExpect(jsonPath("$.data.roles").isArray());
+                .andExpect(jsonPath("$.data.roles").isArray())
+                .andExpect(jsonPath("$.data.permissions").isArray());
+    }
+
+    @Test
+    void wrongPasswordReturnsUnauthorizedAndNoTokenPayload() throws Exception {
+        mockMvc.perform(post("/api/auth/login")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(
+                                Map.of("username", "admin", "password", "wrong-password"))))
+                .andExpect(status().isUnauthorized())
+                .andExpect(jsonPath("$.success").value(false));
+    }
+
+    @Test
+    void logoutBlacklistsRefreshTokenAndRefreshEndpointRejectsIt() throws Exception {
+        MvcResult loginResult = mockMvc.perform(post("/api/auth/login")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(
+                                Map.of("username", "admin", "password", ADMIN_PASSWORD))))
+                .andExpect(status().isOk())
+                .andReturn();
+
+        JsonNode loginJson = objectMapper.readTree(loginResult.getResponse().getContentAsString());
+        String accessToken = loginJson.path("data").path("accessToken").asText();
+        String refreshToken = loginJson.path("data").path("refreshToken").asText();
+
+        mockMvc.perform(post("/api/auth/logout")
+                        .header("Authorization", "Bearer " + accessToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(Map.of("refreshToken", refreshToken))))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.success").value(true));
+
+        mockMvc.perform(post("/api/auth/refresh")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(Map.of("refreshToken", refreshToken))))
+                .andExpect(status().isUnauthorized())
+                .andExpect(jsonPath("$.success").value(false));
     }
 }

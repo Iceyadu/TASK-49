@@ -46,6 +46,7 @@ public class User {
     private LocalDateTime updatedAt;
 
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+    @JsonIgnore
     @Builder.Default
     private Set<UserRole> userRoles = new HashSet<>();
 

@@ -88,7 +88,7 @@
       >
         <div class="catalog-browser__card-header">
           <span class="catalog-browser__card-type">{{ item.contentType }}</span>
-          <span v-if="item.price != null" class="catalog-browser__card-price">${{ item.price.toFixed(2) }}</span>
+          <span v-if="item.price != null && item.price > 0" class="catalog-browser__card-price">${{ item.price.toFixed(2) }}</span>
           <span v-else class="catalog-browser__card-price catalog-browser__card-price--free">Free</span>
         </div>
         <h4 class="catalog-browser__card-title">{{ item.title }}</h4>
