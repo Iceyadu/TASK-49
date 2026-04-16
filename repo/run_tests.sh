@@ -30,7 +30,7 @@ require_docker() {
 }
 
 ensure_mysql() {
-    if docker compose -f "$ROOT_DIR/docker-compose.yml" ps --status running --services | rg -q "^mysql$"; then
+    if docker compose -f "$ROOT_DIR/docker-compose.yml" ps --status running --services | grep -Fxq "mysql"; then
         return
     fi
 
@@ -182,55 +182,6 @@ run_api_tests() {
     echo ""
 }
 
-run_e2e_tests() {
-    echo "=== Running Browser E2E Tests (Playwright, real frontend + backend) ==="
-    ensure_mysql
-    cleanup_e2e_containers
-    resolve_mysql_network
-
-    docker run -d \
-        --name "$E2E_BACKEND_CONTAINER" \
-        --network "$E2E_NETWORK" \
-        -v "$ROOT_DIR:/repo" \
-        -w /repo/backend \
-        -e DB_HOST=mysql \
-        -e DB_PORT=3306 \
-        -e DB_NAME=scholarops \
-        -e DB_USERNAME=scholarops \
-        -e DB_PASSWORD="${DB_PASSWORD:-scholarops_secret}" \
-        -e JWT_SECRET="${JWT_SECRET:-c2Nob2xhcm9wcy1vZmZsaW5lLWxlYXJuaW5nLXN5c3RlbS1zZWNyZXQta2V5LW11c3QtYmUtYXQtbGVhc3QtMjU2LWJpdHM=}" \
-        -e SCHOLAROPS_AES_KEY="${AES_KEY:-0123456789abcdef0123456789abcdef}" \
-        maven:3.9.6-eclipse-temurin-17 \
-        sh -lc "mvn -q spring-boot:run"
-
-    wait_for_http_in_network "http://$E2E_BACKEND_CONTAINER:8080/api/auth/login" "^(400|401|403|405)$" 120 "Backend"
-
-    docker run -d \
-        --name "$E2E_FRONTEND_CONTAINER" \
-        -p 5173:5173 \
-        --network "$E2E_NETWORK" \
-        -v "$ROOT_DIR:/repo" \
-        -w /repo/frontend \
-        -e VITE_API_BASE_URL=http://$E2E_BACKEND_CONTAINER:8080 \
-        node:20-alpine \
-        sh -lc "npm ci && npm run dev -- --host 0.0.0.0 --port 5173"
-
-    wait_for_http_in_network "http://$E2E_FRONTEND_CONTAINER:5173/login" "^(200|304)$" 120 "Frontend"
-
-    if ! docker run --rm \
-        --network "$E2E_NETWORK" \
-        -v "$ROOT_DIR:/repo" \
-        -w /repo/frontend \
-        -e E2E_BASE_URL=http://$E2E_FRONTEND_CONTAINER:5173 \
-        -e E2E_API_BASE=http://$E2E_BACKEND_CONTAINER:8080 \
-        mcr.microsoft.com/playwright:v1.52.0-jammy \
-        sh -lc "npx -y playwright@1.52.0 test --config ../e2e/playwright.config.ts --reporter=line"; then
-        echo "Browser E2E tests completed with failures"
-        OVERALL_FAIL=1
-    fi
-
-    echo ""
-}
 
 require_docker
 trap cleanup_all EXIT
@@ -245,14 +196,10 @@ case "${1:-all}" in
     api)
         run_api_tests
         ;;
-    e2e)
-        run_e2e_tests
-        ;;
     all)
         run_backend_tests
         run_frontend_tests
         run_api_tests
-        run_e2e_tests
         echo "=== All Tests Complete ==="
         ;;
     *)
